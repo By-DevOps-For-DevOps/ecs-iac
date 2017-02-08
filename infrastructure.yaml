@@ -1,0 +1,283 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: DESCRIPTION
+Parameters:
+  TagName:
+    Type: String
+    Description: Provide a Tag name to identify the Infrastructure
+  VpcCIDR:
+    Type: String
+    Description: VPC CIDR Block
+    Default: 10.0.0.0/16
+  PublicSubnet1CIDR:
+    Type: String
+    Description: Public Subnet 1 CIDR Block
+    Default: 10.0.1.0/24
+  PublicSubnet2CIDR:
+    Type: String
+    Description: Public Subnet 2 CIDR Block
+    Default: 10.0.2.0/24
+  PrivateSubnet1CIDR:
+    Type: String
+    Description: Private Subnet 1 CIDR Block
+    Default: 10.0.3.0/24
+  PrivateSubnet2CIDR:
+    Type: String
+    Description: Private Subnet 2 CIDR Block
+    Default: 10.0.4.0/24
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: Common Configuration
+        Parameters:
+          - TagName
+      -
+        Label:
+          default: "Infrastructure Configuration"
+        Parameters:
+          - VpcCIDR
+          - PublicSubnet1CIDR
+          - PublicSubnet2CIDR
+          - PrivateSubnet1CIDR
+          - PrivateSubnet2CIDR
+    ParameterLabels:
+      TagName:
+        default: "Tag name for identification"
+      VpcCIDR:
+        default: "VPC CIDR block"
+      PublicSubnet1CIDR:
+        default: "Public Subnet 1 CIDR"
+      PublicSubnet2CIDR:
+        default: "Public Subnet 2 CIDR"
+      PrivateSubnet1CIDR:
+        default: "Private Subnet 1 CIDR"
+      PrivateSubnet2CIDR:
+        default: "Private Subnet 2 CIDR"
+Resources:
+  VPC:
+    Type: "AWS::EC2::VPC"
+    Properties:
+      CidrBlock: !Ref 'VpcCIDR'
+      Tags:
+        - Key: Name
+          Value: !Join ['', [!Ref 'TagName', '-vpc']]
+  PublicSubnetAZ1:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      AvailabilityZone:
+        Fn::Select:
+          - 0
+          - Fn::GetAZs: ""
+      CidrBlock: !Ref 'PublicSubnet1CIDR'
+      VpcId: !Ref 'VPC'
+      Tags:
+        - Key: Name
+          Value: !Join ['', [!Ref 'TagName', '-PublicSubnetAZ1']]
+  PublicSubnetAZ2:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      AvailabilityZone:
+        Fn::Select:
+          - 1
+          - Fn::GetAZs: ""
+      CidrBlock: !Ref 'PublicSubnet2CIDR'
+      VpcId: !Ref 'VPC'
+      Tags:
+        - Key: Name
+          Value: !Join ['', [!Ref 'TagName', '-PublicSubnetAZ2']]
+  PrivateSubnetAZ1:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      AvailabilityZone:
+        Fn::Select:
+          - 0
+          - Fn::GetAZs: ""
+      CidrBlock: !Ref 'PrivateSubnet1CIDR'
+      VpcId: !Ref 'VPC'
+      Tags:
+        - Key: Name
+          Value: !Join ['', [!Ref 'TagName', '-PrivateSubnetAZ1']]
+  PrivateSubnetAZ2:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      AvailabilityZone:
+        Fn::Select:
+          - 1
+          - Fn::GetAZs: ""
+      CidrBlock: !Ref 'PrivateSubnet2CIDR'
+      VpcId: !Ref 'VPC'
+      Tags:
+        - Key: Name
+          Value: !Join ['', [!Ref 'TagName', '-PrivateSubnetAZ2']]
+  ECSInternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Ref 'TagName'
+  ECSIGVPCAssociation:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref 'ECSInternetGateway'
+      VpcId: !Ref 'VPC'
+  EIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+  NAT:
+    DependsOn: ECSIGVPCAssociation
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId:
+        Fn::GetAtt:
+        - EIP
+        - AllocationId
+      SubnetId: !Ref 'PublicSubnetAZ1'
+  ECSRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref 'VPC'
+  ECSPrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref 'VPC'
+  ECSRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref 'ECSRouteTable'
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref 'ECSInternetGateway'
+    DependsOn:
+    - ECSIGVPCAssociation
+  ECSNatRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref 'ECSPrivateRouteTable'
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref 'NAT'
+  RoutePublicSubnetAZ1Association:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId:
+        !Ref 'ECSRouteTable'
+      SubnetId:
+        !Ref 'PublicSubnetAZ1'
+  RoutePublicSubnetAZ2Association:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId:
+        !Ref 'ECSRouteTable'
+      SubnetId:
+        !Ref 'PublicSubnetAZ2'
+  RoutePrivateSubnetAZ1Association:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId:
+        !Ref 'ECSPrivateRouteTable'
+      SubnetId:
+        !Ref 'PrivateSubnetAZ1'
+  RoutePrivateSubnetAZ2Association:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId:
+        !Ref 'ECSPrivateRouteTable'
+      SubnetId:
+        !Ref 'PrivateSubnetAZ2'
+  PublicSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Public Security Group
+      VpcId: !Ref 'VPC'
+      Tags:
+        - Key: Name
+          Value: !Ref 'TagName'
+  PrivateSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Private Security Group
+      VpcId: !Ref 'VPC'
+      SecurityGroupIngress:
+      - IpProtocol: -1
+        FromPort: '0'
+        ToPort: '0'
+        CidrIp: !Ref 'VpcCIDR'
+      Tags:
+      - Key: Name
+        Value: !Join ['', [!Ref 'TagName', 'Private-SG']]
+  PublicSecurityGroupHTTPinbound:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref 'PublicSecurityGroup'
+      IpProtocol: tcp
+      FromPort: '80'
+      ToPort: '80'
+      CidrIp: 0.0.0.0/0
+  PublicSecurityGroupSSHinbound:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref 'PublicSecurityGroup'
+      IpProtocol: tcp
+      FromPort: '22'
+      ToPort: '22'
+      CidrIp: 0.0.0.0/0
+Outputs:
+  Tag:
+    Description: Tag name
+    Value:
+      Ref: TagName
+    Export:
+      Name:
+        Fn::Sub: "${TagName}"
+  VPCId:
+    Description: VPC ID
+    Value:
+      Ref: VPC
+    Export:
+      Name:
+        Fn::Sub: "${TagName}-VpcId"
+  PublicSubnetAZ1:
+    Description: The subnet ID to use for public web servers
+    Value:
+      Ref: PublicSubnetAZ1
+    Export:
+      Name:
+        Fn::Sub: "${TagName}-PublicSubnetAZ1ID"
+  PublicSubnetAZ2:
+    Description: The subnet ID to use for public web servers
+    Value:
+      Ref: PublicSubnetAZ2
+    Export:
+      Name:
+        Fn::Sub: "${TagName}-PublicSubnetAZ2ID"
+  PrivateSubnetAZ1:
+    Description: The subnet ID to use for private web servers
+    Value:
+      Ref: PrivateSubnetAZ1
+    Export:
+      Name:
+        Fn::Sub: "${TagName}-PrivateSubnetAZ1ID"
+  PrivateSubnetAZ2:
+    Description: The subnet ID to use for private web servers
+    Value:
+      Ref: PrivateSubnetAZ2
+    Export:
+      Name:
+        Fn::Sub: "${TagName}-PrivateSubnetAZ2ID"
+  PublicSecurityGroup:
+    Description: The security group ID to use for public servers
+    Value:
+      Fn::GetAtt:
+      - PublicSecurityGroup
+      - GroupId
+    Export:
+      Name:
+        Fn::Sub: "${TagName}-PublicSecurityGroupID"
+  PrivateSecurityGroup:
+    Description: The security group ID to use for private servers
+    Value:
+      Fn::GetAtt:
+      - PrivateSecurityGroup
+      - GroupId
+    Export:
+      Name:
+        Fn::Sub: "${TagName}-PrivateSecurityGroupID"
