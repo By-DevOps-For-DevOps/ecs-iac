@@ -1,0 +1,418 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: >
+  AWS CloudFormation Sample Template Continuous Delievery: This template
+  builds an AWS CodePipeline pipeline that implements a continuous delivery release
+  process for AWS CloudFormation stacks. Submit a CloudFormation source artifact
+  to an Amazon S3 location before building the pipeline. The pipeline uses the
+  artifact to automatically create stacks and change sets.
+  **WARNING** This template creates Amazon EC2 instances. You will be billed
+  for the AWS resources used when you create a stack using this template.
+
+Parameters:
+  PipelineName:
+    Description: A name for pipeline
+    Type: String
+  TagName:
+    Type: String
+    Description: Tag name to identify the AWS resources and exporting variables for other stacks
+  S3Bucket:
+    Default: S3_BUCKET_NAME
+    Description: The name of the S3 bucket that contains the source artifact, which must be in the same region as this stack
+    Type: String
+  SourceS3Key:
+    Default: templates.zip
+    Description: The file name of the source artifact, such as myfolder/myartifact.zip
+    Type: String
+  Email:
+    Description: The email address where CodePipeline sends pipeline notifications
+    Type: String
+  Environment:
+    Type: String
+    Description: Specify the environment
+    Default: dev-and-staging
+    AllowedValues:
+      - production
+      - dev-and-staging
+    ConstraintDescription: Must specify production, staging, hotfix, development or feature.
+
+Conditions:
+  IsProduction: !Equals [ !Ref Environment, production ]
+  IsDevAndStaging: !Equals [ !Ref Environment, dev-and-staging ]
+
+Resources:
+  ArtifactStoreBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      VersioningConfiguration:
+        Status: Enabled
+
+  CodePipelineSNSTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      Subscription:
+        - Endpoint: !Ref Email
+          Protocol: email
+
+  Pipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      ArtifactStore:
+        Location: !Ref 'ArtifactStoreBucket'
+        Type: S3
+      DisableInboundStageTransitions: []
+      Name: !Ref 'PipelineName'
+      RoleArn: !GetAtt [PipelineRole, Arn]
+      Stages:
+        - Name: S3Source
+          Actions:
+            - Name: TemplateSource
+              ActionTypeId:
+                Category: Source
+                Owner: AWS
+                Provider: S3
+                Version: '1'
+              Configuration:
+                S3Bucket: !Ref 'S3Bucket'
+                S3ObjectKey: !Ref 'SourceS3Key'
+              OutputArtifacts:
+                - Name: TemplateSource
+              RunOrder: '1'
+        - !If
+          - IsDevAndStaging
+          - Name: DevEnvironment
+            Actions:
+              - Name: Create-DevVPC
+                ActionTypeId:
+                  Category: Deploy
+                  Owner: AWS
+                  Provider: CloudFormation
+                  Version: '1'
+                InputArtifacts:
+                  - Name: TemplateSource
+                Configuration:
+                  ActionMode: REPLACE_ON_FAILURE
+                  RoleArn: !GetAtt [CFNRole, Arn]
+                  StackName: !Join ["-", ["Ref":"AWS::StackName", "DevEnvironment-VPC"]]
+                  TemplateConfiguration: TemplateSource::network-config.json
+                  TemplatePath: TemplateSource::network.yaml
+                  ParameterOverrides: !Sub |
+                    {
+                      "EnvironmentName": "${TagName}-Dev"
+                    }
+                RunOrder: '1'
+              - Name: Create-DevSGs
+                ActionTypeId:
+                  Category: Deploy
+                  Owner: AWS
+                  Provider: CloudFormation
+                  Version: '1'
+                InputArtifacts:
+                  - Name: TemplateSource
+                Configuration:
+                  ActionMode: REPLACE_ON_FAILURE
+                  RoleArn: !GetAtt [CFNRole, Arn]
+                  StackName: !Join ["-", ["Ref":"AWS::StackName", "DevEnvironment-SecurityGroups"]]
+                  TemplatePath: TemplateSource::security-groups.yaml
+                  ParameterOverrides: !Sub |
+                    {
+                      "EnvironmentName": "${TagName}-Dev"
+                    }
+                RunOrder: '2'
+              - Name: Create-DevEcs
+                ActionTypeId:
+                  Category: Deploy
+                  Owner: AWS
+                  Provider: CloudFormation
+                  Version: '1'
+                InputArtifacts:
+                  - Name: TemplateSource
+                Configuration:
+                  ActionMode: REPLACE_ON_FAILURE
+                  Capabilities: CAPABILITY_NAMED_IAM
+                  RoleArn: !GetAtt [CFNRole, Arn]
+                  StackName: !Join ["-", ["Ref":"AWS::StackName", "DevEnvironment-ECS"]]
+                  TemplatePath: TemplateSource::ecs-cluster.yaml
+                  TemplateConfiguration: TemplateSource::ecs-cluster-config.json
+                  ParameterOverrides: !Sub |
+                    {
+                      "EnvironmentName": "${TagName}-Dev"
+                    }
+                RunOrder: '3'
+          - !Ref AWS::NoValue
+        - !If
+          - IsDevAndStaging
+          - Name: StagingEnvironment
+            Actions:
+              - Name: Create-VPC-ChangeSet
+                ActionTypeId:
+                  Category: Deploy
+                  Owner: AWS
+                  Provider: CloudFormation
+                  Version: '1'
+                InputArtifacts:
+                  - Name: TemplateSource
+                Configuration:
+                  ActionMode: CHANGE_SET_REPLACE
+                  RoleArn: !GetAtt [CFNRole, Arn]
+                  StackName: !Join ["-", ["Ref":"AWS::StackName", "StagingEnvironment-VPC"]]
+                  ChangeSetName: ChangesToStagingVPC
+                  TemplateConfiguration: TemplateSource::network-config.json
+                  TemplatePath: TemplateSource::network.yaml
+                  ParameterOverrides: !Sub |
+                    {
+                      "EnvironmentName": "${TagName}-Staging"
+                    }
+              - Name: Create-SG-ChangeSet
+                ActionTypeId:
+                  Category: Deploy
+                  Owner: AWS
+                  Provider: CloudFormation
+                  Version: '1'
+                InputArtifacts:
+                  - Name: TemplateSource
+                Configuration:
+                  ActionMode: CHANGE_SET_REPLACE
+                  RoleArn: !GetAtt [CFNRole, Arn]
+                  StackName: !Join ["-", ["Ref":"AWS::StackName", "StagingEnvironment-SecurityGroups"]]
+                  ChangeSetName: ChangesToStagingSecurityGroups
+                  TemplatePath: TemplateSource::security-groups.yaml
+                  ParameterOverrides: !Sub |
+                    {
+                      "EnvironmentName": "${TagName}-Staging"
+                    }
+                RunOrder: '1'
+              - Name: Create-ECS-ChangeSet
+                ActionTypeId:
+                  Category: Deploy
+                  Owner: AWS
+                  Provider: CloudFormation
+                  Version: '1'
+                InputArtifacts:
+                  - Name: TemplateSource
+                Configuration:
+                  ActionMode: CHANGE_SET_REPLACE
+                  Capabilities: CAPABILITY_NAMED_IAM
+                  RoleArn: !GetAtt [CFNRole, Arn]
+                  StackName: !Join ["-", ["Ref":"AWS::StackName", "StagingEnvironment-ECS"]]
+                  ChangeSetName: ChangesToStagingEcsCluster
+                  TemplatePath: TemplateSource::ecs-cluster.yaml
+                  TemplateConfiguration: TemplateSource::ecs-cluster-config.json
+                  ParameterOverrides: !Sub |
+                    {
+                      "EnvironmentName": "${TagName}-Staging"
+                    }
+                RunOrder: '1'
+              - Name: ApproveChangeSets
+                ActionTypeId:
+                  Category: Approval
+                  Owner: AWS
+                  Provider: Manual
+                  Version: '1'
+                Configuration:
+                  NotificationArn: !Ref CodePipelineSNSTopic
+                  CustomData: 'New change sets were created please review and approve if you want to implement the changes?'
+                RunOrder: '2'
+              - Name: Execute-VPC-ChangeSet
+                ActionTypeId:
+                  Category: Deploy
+                  Owner: AWS
+                  Provider: CloudFormation
+                  Version: '1'
+                Configuration:
+                  ActionMode: CHANGE_SET_EXECUTE
+                  RoleArn: !GetAtt [CFNRole, Arn]
+                  StackName: !Join ["-", ["Ref":"AWS::StackName", "StagingEnvironment-VPC"]]
+                  ChangeSetName: ChangesToStagingVPC
+                RunOrder: '3'
+              - Name: Execute-SG-ChangeSet
+                ActionTypeId:
+                  Category: Deploy
+                  Owner: AWS
+                  Provider: CloudFormation
+                  Version: '1'
+                Configuration:
+                  ActionMode: CHANGE_SET_EXECUTE
+                  RoleArn: !GetAtt [CFNRole, Arn]
+                  StackName: !Join ["-", ["Ref":"AWS::StackName", "StagingEnvironment-SecurityGroups"]]
+                  ChangeSetName: ChangesToStagingSecurityGroups
+                RunOrder: '4'
+              - Name: Execute-ECS-ChangeSet
+                ActionTypeId:
+                  Category: Deploy
+                  Owner: AWS
+                  Provider: CloudFormation
+                  Version: '1'
+                Configuration:
+                  ActionMode: CHANGE_SET_EXECUTE
+                  Capabilities: CAPABILITY_NAMED_IAM
+                  RoleArn: !GetAtt [CFNRole, Arn]
+                  StackName: !Join ["-", ["Ref":"AWS::StackName", "StagingEnvironment-ECS"]]
+                  ChangeSetName: ChangesToStagingEcsCluster
+                RunOrder: '5'
+          - !Ref AWS::NoValue
+        - !If
+          - IsProduction
+          - Name: ProductionEnvironment
+            Actions:
+              - Name: Create-VPC-ChangeSet
+                ActionTypeId:
+                  Category: Deploy
+                  Owner: AWS
+                  Provider: CloudFormation
+                  Version: '1'
+                InputArtifacts:
+                  - Name: TemplateSource
+                Configuration:
+                  ActionMode: CHANGE_SET_REPLACE
+                  RoleArn: !GetAtt [CFNRole, Arn]
+                  StackName: !Join ["-", ["Ref":"AWS::StackName", "ProdEnvironment-VPC"]]
+                  ChangeSetName: ChangesToProdVPC
+                  TemplateConfiguration: TemplateSource::network-config.json
+                  TemplatePath: TemplateSource::network.yaml
+                  ParameterOverrides: !Sub |
+                    {
+                      "EnvironmentName": "${TagName}-Prod"
+                    }
+              - Name: Create-SG-ChangeSet
+                ActionTypeId:
+                  Category: Deploy
+                  Owner: AWS
+                  Provider: CloudFormation
+                  Version: '1'
+                InputArtifacts:
+                  - Name: TemplateSource
+                Configuration:
+                  ActionMode: CHANGE_SET_REPLACE
+                  RoleArn: !GetAtt [CFNRole, Arn]
+                  StackName: !Join ["-", ["Ref":"AWS::StackName", "ProdEnvironment-SecurityGroups"]]
+                  ChangeSetName: ChangesToProdSecurityGroups
+                  TemplatePath: TemplateSource::security-groups.yaml
+                  ParameterOverrides: !Sub |
+                    {
+                      "EnvironmentName": "${TagName}-Prod"
+                    }
+                RunOrder: '1'
+              - Name: Create-ECS-ChangeSet
+                ActionTypeId:
+                  Category: Deploy
+                  Owner: AWS
+                  Provider: CloudFormation
+                  Version: '1'
+                InputArtifacts:
+                  - Name: TemplateSource
+                Configuration:
+                  ActionMode: CHANGE_SET_REPLACE
+                  Capabilities: CAPABILITY_NAMED_IAM
+                  RoleArn: !GetAtt [CFNRole, Arn]
+                  StackName: !Join ["-", ["Ref":"AWS::StackName", "ProdEnvironment-ECS"]]
+                  ChangeSetName: ChangesToProdEcsCluster
+                  TemplatePath: TemplateSource::ecs-cluster.yaml
+                  TemplateConfiguration: TemplateSource::ecs-cluster-config.json
+                  ParameterOverrides: !Sub |
+                    {
+                      "EnvironmentName": "${TagName}-Prod"
+                    }
+                RunOrder: '1'
+              - Name: ApproveChangeSets
+                ActionTypeId:
+                  Category: Approval
+                  Owner: AWS
+                  Provider: Manual
+                  Version: '1'
+                Configuration:
+                  NotificationArn: !Ref CodePipelineSNSTopic
+                  CustomData: 'New change sets were created please review and approve if you want to implement the changes?'
+                RunOrder: '2'
+              - Name: Execute-VPC-ChangeSet
+                ActionTypeId:
+                  Category: Deploy
+                  Owner: AWS
+                  Provider: CloudFormation
+                  Version: '1'
+                Configuration:
+                  ActionMode: CHANGE_SET_EXECUTE
+                  RoleArn: !GetAtt [CFNRole, Arn]
+                  StackName: !Join ["-", ["Ref":"AWS::StackName", "ProdEnvironment-VPC"]]
+                  ChangeSetName: ChangesToProdVPC
+                RunOrder: '3'
+              - Name: Execute-SG-ChangeSet
+                ActionTypeId:
+                  Category: Deploy
+                  Owner: AWS
+                  Provider: CloudFormation
+                  Version: '1'
+                Configuration:
+                  ActionMode: CHANGE_SET_EXECUTE
+                  RoleArn: !GetAtt [CFNRole, Arn]
+                  StackName: !Join ["-", ["Ref":"AWS::StackName", "ProdEnvironment-SecurityGroups"]]
+                  ChangeSetName: ChangesToProdSecurityGroups
+                RunOrder: '4'
+              - Name: Execute-ECS-ChangeSet
+                ActionTypeId:
+                  Category: Deploy
+                  Owner: AWS
+                  Provider: CloudFormation
+                  Version: '1'
+                Configuration:
+                  ActionMode: CHANGE_SET_EXECUTE
+                  Capabilities: CAPABILITY_NAMED_IAM
+                  RoleArn: !GetAtt [CFNRole, Arn]
+                  StackName: !Join ["-", ["Ref":"AWS::StackName", "ProdEnvironment-ECS"]]
+                  ChangeSetName: ChangesToProdEcsCluster
+                RunOrder: '5'
+          - !Ref AWS::NoValue
+
+
+  CFNRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action: ['sts:AssumeRole']
+          Effect: Allow
+          Principal:
+            Service: [cloudformation.amazonaws.com]
+        Version: '2012-10-17'
+      Path: /
+      Policies:
+        - PolicyName: CloudFormationRole
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Action:
+                  - '*'
+                Effect: Allow
+                Resource: '*'
+
+  PipelineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action: ['sts:AssumeRole']
+          Effect: Allow
+          Principal:
+            Service: [codepipeline.amazonaws.com]
+        Version: '2012-10-17'
+      Path: /
+      Policies:
+        - PolicyName: CodePipelineAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Action:
+                - 's3:*'
+                - 'cloudformation:CreateStack'
+                - 'cloudformation:DescribeStacks'
+                - 'cloudformation:DeleteStack'
+                - 'cloudformation:UpdateStack'
+                - 'cloudformation:CreateChangeSet'
+                - 'cloudformation:ExecuteChangeSet'
+                - 'cloudformation:DeleteChangeSet'
+                - 'cloudformation:DescribeChangeSet'
+                - 'cloudformation:SetStackPolicy'
+                - 'iam:PassRole'
+                - 'sns:Publish'
+                Effect: Allow
+                Resource: '*'
