@@ -1,0 +1,7 @@
+{
+  "Parameters" : {
+    "EnvironmentName" : "Dev",
+    "InstanceType" : "t2.micro",
+    "ClusterSize" : "1"
+  }
+}
