@@ -3,3 +3,5 @@
 *.tfstate.backup
 # IDE
 .idea/
+templates/ecs-cluster-config.json
+templates/network-config.json
