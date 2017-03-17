@@ -32,24 +32,28 @@ Mappings:
     # (note the AMI identifier is region specific)
 
     AWSRegionToAMI:
-        us-east-1:
-            AMI: ami-6bb2d67c
-        us-east-2:
-            AMI: ami-bd3e64d8
-        us-west-1:
-            AMI: ami-70632110
-        us-west-2:
-            AMI: ami-2d1bce4d
-        eu-west-1:
-            AMI: ami-078df974
-        eu-central-1:
-            AMI: ami-d3cf3ebc
-        ap-northeast-1:
-            AMI: ami-2b6ba64a
-        ap-southeast-1:
-            AMI: ami-55598036
-        ap-southeast-2:
-            AMI: ami-0e20176d
+            us-east-1:
+                AMIID: ami-0b33d91d
+            us-east-2:
+                AMIID: ami-c55673a0
+            us-west-1:
+                AMIID: ami-f173cc91
+            us-west-2:
+                AMIID: ami-165a0876
+            eu-west-1:
+                AMIID: ami-70edb016
+            eu-west-2:
+                AMIID: ami-f1949e95
+            eu-central-1:
+                AMIID: ami-ebed508f
+            ap-northeast-1:
+                AMIID: ami-56d4ad31
+            ap-southeast-1:
+                AMIID: ami-dc9339bf
+            ap-southeast-2:
+                AMIID: ami-dc9339bf
+            ca-central-1:
+                AMIID: ami-ebed508f
 
 Resources:
 
@@ -96,6 +100,14 @@ Resources:
                     yum install -y aws-cfn-bootstrap
                     /opt/aws/bin/cfn-init -v --region ${AWS::Region} --stack ${AWS::StackName} --resource ECSLaunchConfiguration
                     /opt/aws/bin/cfn-signal -e $? --region ${AWS::Region} --stack ${AWS::StackName} --resource ECSAutoScalingGroup
+                    sudo yum install -y ecs-init
+                    echo ECS_CLUSTER=${ECSCluster} >> /etc/ecs/ecs.config
+                    echo DOCKER_OPTS="-g /var/lib/docker" >> /etc/default/docker
+                    mkfs -t ext4 /dev/sdk
+                    mkdir -p /var/lib/docker
+                    mount /dev/sdk /var/lib/docker
+                    sudo service docker start
+                    sudo start ecs
 
         Metadata:
             AWS::CloudFormation::Init:
