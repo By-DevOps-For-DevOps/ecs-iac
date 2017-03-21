@@ -2,6 +2,7 @@
   "Parameters" : {
     "EnvironmentName" : "Dev",
     "InstanceType" : "t2.micro",
-    "ClusterSize" : "1"
+    "ClusterSize" : "1",
+    "KeyName" : ""
   }
 }
