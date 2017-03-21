@@ -17,6 +17,10 @@ Parameters:
         Description: How many ECS hosts do you want to initially deploy?
         Type: Number
         Default: 2
+    
+    KeyName:
+        Type: AWS::EC2::KeyPair::KeyName
+        Description: Name of an existing EC2 KeyPair to enable SSH access to the ECS instances.
 
 Mappings:
 
@@ -32,28 +36,28 @@ Mappings:
     # (note the AMI identifier is region specific)
 
     AWSRegionToAMI:
-            us-east-1:
-                AMIID: ami-0b33d91d
-            us-east-2:
-                AMIID: ami-c55673a0
-            us-west-1:
-                AMIID: ami-f173cc91
-            us-west-2:
-                AMIID: ami-165a0876
-            eu-west-1:
-                AMIID: ami-70edb016
-            eu-west-2:
-                AMIID: ami-f1949e95
-            eu-central-1:
-                AMIID: ami-ebed508f
-            ap-northeast-1:
-                AMIID: ami-56d4ad31
-            ap-southeast-1:
-                AMIID: ami-dc9339bf
-            ap-southeast-2:
-                AMIID: ami-dc9339bf
-            ca-central-1:
-                AMIID: ami-ebed508f
+        us-east-1:
+            AMIID: ami-b2df2ca4
+        us-east-2:
+            AMIID: ami-832b0ee6
+        us-west-1:
+            AMIID: ami-dd104dbd
+        us-west-2:
+            AMIID: ami-022b9262
+        eu-west-1:
+            AMIID: ami-a7f2acc1
+        eu-west-2:
+            AMIID: ami-3fb6bc5b
+        eu-central-1:
+            AMIID: ami-ec2be583
+        ap-northeast-1:
+            AMIID: ami-c393d6
+        ap-southeast-1:
+            AMIID: ami-a88530cb
+        ap-southeast-2:
+            AMIID: ami-8af8ffe9
+        ca-central-1:
+            AMIID: ami-ead5688e
 
 Resources:
 
@@ -89,8 +93,14 @@ Resources:
     ECSLaunchConfiguration:
         Type: AWS::AutoScaling::LaunchConfiguration
         Properties:
-            ImageId:  !FindInMap [AWSRegionToAMI, !Ref "AWS::Region", AMI]
+            ImageId:  !FindInMap [AWSRegionToAMI, !Ref "AWS::Region", AMIID]
             InstanceType: !Ref InstanceType
+            KeyName: !Ref 'KeyName'
+            BlockDeviceMappings:
+                - DeviceName: "/dev/sdk"
+                  Ebs:
+                    VolumeSize: '150'
+                    VolumeType: 'gp2'
             SecurityGroups:
                 - Fn::ImportValue: !Sub "${EnvironmentName}-ECSHostSecurityGroup"
             IamInstanceProfile: !Ref ECSInstanceProfile
@@ -100,14 +110,9 @@ Resources:
                     yum install -y aws-cfn-bootstrap
                     /opt/aws/bin/cfn-init -v --region ${AWS::Region} --stack ${AWS::StackName} --resource ECSLaunchConfiguration
                     /opt/aws/bin/cfn-signal -e $? --region ${AWS::Region} --stack ${AWS::StackName} --resource ECSAutoScalingGroup
-                    sudo yum install -y ecs-init
                     echo ECS_CLUSTER=${ECSCluster} >> /etc/ecs/ecs.config
-                    echo DOCKER_OPTS="-g /var/lib/docker" >> /etc/default/docker
-                    mkfs -t ext4 /dev/sdk
-                    mkdir -p /var/lib/docker
-                    mount /dev/sdk /var/lib/docker
-                    sudo service docker start
-                    sudo start ecs
+                    sudo vgextend docker /dev/xvdk
+                    sudo lvextend -L150G /dev/docker/docker-pool
 
         Metadata:
             AWS::CloudFormation::Init:
