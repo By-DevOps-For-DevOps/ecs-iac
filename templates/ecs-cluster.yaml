@@ -37,27 +37,27 @@ Mappings:
 
     AWSRegionToAMI:
         us-east-1:
-            AMIID: ami-b2df2ca4
+            AMIID: ami-275ffe31
         us-east-2:
-            AMIID: ami-832b0ee6
+            AMIID: ami-62745007
         us-west-1:
-            AMIID: ami-dd104dbd
+            AMIID: ami-689bc208
         us-west-2:
-            AMIID: ami-022b9262
+            AMIID: ami-62d35c02
         eu-west-1:
-            AMIID: ami-a7f2acc1
+            AMIID: ami-95f8d2f3
         eu-west-2:
-            AMIID: ami-3fb6bc5b
+            AMIID: ami-bf9481db
         eu-central-1:
-            AMIID: ami-ec2be583
+            AMIID: ami-085e8a67
         ap-northeast-1:
-            AMIID: ami-c393d6
+            AMIID: ami-f63f6f91
         ap-southeast-1:
-            AMIID: ami-a88530cb
+            AMIID: ami-b4ae1dd7
         ap-southeast-2:
-            AMIID: ami-8af8ffe9
+            AMIID: ami-fbe9eb98
         ca-central-1:
-            AMIID: ami-ead5688e
+            AMIID: ami-ee58e58a
 
 Resources:
 
