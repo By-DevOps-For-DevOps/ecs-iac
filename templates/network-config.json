@@ -6,6 +6,5 @@
     "PublicSubnet2CIDR" : "10.192.11.0/24",
     "PrivateSubnet1CIDR" : "10.192.20.0/24",
     "PrivateSubnet2CIDR" : "10.192.21.0/24"
-
   }
 }
