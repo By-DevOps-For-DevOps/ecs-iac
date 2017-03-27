@@ -3,6 +3,8 @@
     "EnvironmentName" : "Dev",
     "InstanceType" : "t2.micro",
     "ClusterSize" : "1",
-    "KeyName" : ""
+    "ClusterMaxSize" : "5",
+    "KeyName" : "",
+    "InstanceDockerVolume": "100"
   }
 }
