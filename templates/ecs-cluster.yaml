@@ -107,7 +107,7 @@ Resources:
             InstanceType: !Ref InstanceType
             KeyName: !Ref 'KeyName'
             BlockDeviceMappings:
-                - DeviceName: "/dev/sdk"
+                - DeviceName: "/dev/xvdcz"
                   Ebs:
                     VolumeSize: !Ref InstanceDockerVolume
                     VolumeType: 'gp2'
@@ -121,8 +121,6 @@ Resources:
                     /opt/aws/bin/cfn-init -v --region ${AWS::Region} --stack ${AWS::StackName} --resource ECSLaunchConfiguration
                     /opt/aws/bin/cfn-signal -e $? --region ${AWS::Region} --stack ${AWS::StackName} --resource ECSAutoScalingGroup
                     echo ECS_CLUSTER=${ECSCluster} >> /etc/ecs/ecs.config
-                    vgextend docker /dev/xvdk
-                    lvextend -L${InstanceDockerVolume}G /dev/docker/docker-pool
                     curl -O https://bootstrap.pypa.io/get-pip.py
                     python3 /get-pip.py
                     /usr/local/bin/pip install awscli
