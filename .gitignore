@@ -3,3 +3,6 @@
 *.tfstate.backup
 # IDE
 .idea/
+*.pem
+*~
+*.yaml-e
