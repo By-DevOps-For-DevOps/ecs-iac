@@ -1,10 +1,9 @@
 # ngp-infrastructure
 
- This template  builds an [AWS CodePipeline](https://aws.amazon.com/codepipeline/)
- pipeline that implements a continuous delivery release
-  process for AWS CloudFormation stacks. Submit a CloudFormation source artifact
-  to an Amazon S3 location before building the pipeline. The pipeline uses the
-  artifact to automatically create stacks and change sets.
+This template  builds an [AWS CodePipeline](https://aws.amazon.com/codepipeline/)
+pipeline that implements a continuous delivery release process for AWS CloudFormation stacks.
+Submit a CloudFormation source artifact to an Amazon S3 location before building the pipeline.
+The pipeline uses the artifact to automatically create stacks and change sets.
 
 ## This will create
 - VPC
@@ -18,23 +17,23 @@
     - Enable Versioning on artifact bucket
     - Choose region same as your cloudfromation stack.
 2. Clone the repo    
-   `git clone https://github.com/microservices-today/ngp-infrastructure-codepipeline.git`
-3. Run `cd ngp-infrastructure-codepipeline`
-4. Modify variables in `templates/ecs-cluster-config.json` and `templates/network-config.json`
-5. Export AWS credentials   
+   `git clone https://github.com/microservices-today/ngp-infrastructure-codepipeline.git`  
+   `cd ngp-infrastructure-codepipeline`
+3. Modify variables in `templates/ecs-cluster-config.json` and `templates/network-config.json`
+4. Export AWS credentials   
 ```
 export AWS_ACCESS_KEY_ID="accesskey"   
 export AWS_SECRET_ACCESS_KEY="secretkey"    
 export AWS_DEFAULT_REGION="ap-northeast-1"   
 ```
-4. Run `bash bin/configure.sh`   
+5. Run `bash bin/configure.sh`   
    OR, Manually  
    - Compress the files in `templates` directory in to zip (without any folder)
    - Upload the `.zip` file to S3 bucket.
    - Launch `infrastructure-pipeline.yaml` stack.
-5. Confirm SNS subscription
+6. Confirm SNS subscription
     - Confirmation e-maill will be arrived in your e-mail box.
-6. Go to CodePipeline Console, and approve Changesets.
+7. Go to CodePipeline Console, and approve Changesets.
 
 ## Delete Stack
 
