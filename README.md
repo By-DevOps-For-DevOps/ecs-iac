@@ -1,4 +1,4 @@
-# ngp-infrastructure
+# ngp-infrastructure-codepipeline
 
 This template  builds an [AWS CodePipeline](https://aws.amazon.com/codepipeline/)
 pipeline that implements a continuous delivery release process for AWS CloudFormation stacks.
