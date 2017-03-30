@@ -212,7 +212,8 @@ Resources:
                                 "ecr:BatchCheckLayerAvailability",
                                 "ecr:BatchGetImage",
                                 "ecr:GetDownloadUrlForLayer",
-                                "ecr:GetAuthorizationToken"
+                                "ecr:GetAuthorizationToken",
+                                "cloudwatch:*"
                             ],
                             "Resource": "*"
                         }]
