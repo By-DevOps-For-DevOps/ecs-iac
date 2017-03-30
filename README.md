@@ -20,6 +20,7 @@ The pipeline uses the artifact to automatically create stacks and change sets.
    `git clone https://github.com/microservices-today/ngp-infrastructure-codepipeline.git`  
    `cd ngp-infrastructure-codepipeline`
 3. Modify variables in `templates/ecs-cluster-config.json` and `templates/network-config.json`
+   Add your pem file name to `ecs-cluster-config.json` for accessing ECS instances. (e.g. `"KeyName" : "ecs"` if ecs.pem file)
 4. Export AWS credentials   
 ```
 export AWS_ACCESS_KEY_ID="accesskey"   
