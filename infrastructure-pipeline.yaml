@@ -455,7 +455,7 @@ Resources:
                     Version: '1'
                   Configuration:
                     NotificationArn: !Ref CodePipelineSNSTopic
-                    CustomData: 'Confirm to delete the Development and Staging Environments'
+                    CustomData: 'Confirm to delete the Production Environments'
                   RunOrder: '1'
                 - Name: Delete-ECS-Cluster-Prod
                   ActionTypeId:
