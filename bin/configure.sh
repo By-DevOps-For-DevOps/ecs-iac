@@ -7,10 +7,10 @@ NC='\033[0m' # No Color
 echo -e "\nSpecify the ${GREEN}S3 bucket name${NC} for storing the templates, the bucket should be in same region of CodePipeline"
 read S3_BUCKET_NAME
 
-echo -e "Enter the ${GREEN}AWS REGION${NC} to deploy the Cloudformation Stack [default: ${BLUE}ap-northeast-1${NC}]"
+echo -e "Enter the ${GREEN}AWS REGION${NC} to deploy the Cloudformation Stack [default: ${BLUE}ap-southeast-1${NC}]"
 read AWS_REGION
 if [[ -z "$AWS_REGION" ]]; then
-    AWS_REGION=ap-northeast-1
+    AWS_REGION=ap-southeast-1
 fi
 
 cd templates
