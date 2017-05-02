@@ -5,6 +5,6 @@
     "ClusterSize" : "1",
     "ClusterMaxSize" : "5",
     "KeyName" : "",
-    "InstanceDockerVolume": "100"
+    "InstanceDockerVolume": "128"
   }
 }
