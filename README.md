@@ -26,7 +26,7 @@ The pipeline uses the artifact to automatically create stacks and change sets.
 ```
 export AWS_ACCESS_KEY_ID="accesskey"   
 export AWS_SECRET_ACCESS_KEY="secretkey"    
-export AWS_DEFAULT_REGION="ap-northeast-1"   
+export AWS_DEFAULT_REGION="ap-southeast-1"
 ```
 5. Run `bash bin/configure.sh`   
    OR, Manually  
