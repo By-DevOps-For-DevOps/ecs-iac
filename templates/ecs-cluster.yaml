@@ -32,6 +32,10 @@ Parameters:
         Type: AWS::EC2::KeyPair::KeyName
         Description: Name of an existing EC2 KeyPair to enable SSH access to the ECS instances.
 
+    EfsFileSystemId:
+        Description: EFS File System Id
+        Type: String
+
 Mappings:
 
     # These are the latest ECS optimized AMIs as of March 2017:
@@ -117,6 +121,7 @@ Resources:
             UserData:
                 "Fn::Base64": !Sub |
                     #!/bin/bash
+                    yum update -y
                     yum install -y aws-cfn-bootstrap python34
                     /opt/aws/bin/cfn-init -v --region ${AWS::Region} --stack ${AWS::StackName} --resource ECSLaunchConfiguration
                     /opt/aws/bin/cfn-signal -e $? --region ${AWS::Region} --stack ${AWS::StackName} --resource ECSAutoScalingGroup
@@ -138,6 +143,17 @@ Resources:
                     --period 60 --evaluation-periods 3 --threshold 50 \
                     --comparison-operator GreaterThanOrEqualToThreshold \
                     --dimensions Name=InstanceId,Value=$(curl  http://169.254.169.254/latest/meta-data/instance-id) --region ${AWS::Region}
+                    yum install -y jq nfs-utils
+                    EC2_AVAIL_ZONE="$(curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone)"
+                    DIR_TGT="/mnt/efs"
+                    mkdir "${DIR_TGT}"
+                    DIR_SRC="${EC2_AVAIL_ZONE}.${EfsFileSystemId}.efs.${AWS::Region}.amazonaws.com"
+                    mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,soft,timeo=600,retrans=2 "${DIR_SRC}:/" "${DIR_TGT}"
+                    cp -p "/etc/fstab" "/etc/fstab.back-$(date +%F)"
+                    echo -e "${DIR_SRC}:/ \t\t ${DIR_TGT} \t\t nfs \t\t nfsvers=4.1,rsize=1048576,wsize=1048576,soft,timeo=600,retrans=2 \t\t 0 \t\t 0" | tee -a /etc/fstab
+                    docker stop ecs-agent
+                    /etc/init.d/docker restart
+                    docker start ecs-agent
         Metadata:
             AWS::CloudFormation::Init:
                 config:
