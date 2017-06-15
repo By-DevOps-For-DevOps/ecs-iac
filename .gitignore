@@ -6,3 +6,4 @@
 *.pem
 *~
 *.yaml-e
+.envrc
