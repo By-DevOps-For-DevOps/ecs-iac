@@ -27,19 +27,19 @@ Parameters:
         Description: Maximum number of instances allowed in Autoscaling group?
         Type: Number
         Default: 10
-    
+
     KeyName:
         Type: AWS::EC2::KeyPair::KeyName
         Description: Name of an existing EC2 KeyPair to enable SSH access to the ECS instances.
 
 Mappings:
 
-    # These are the latest ECS optimized AMIs as of September 2016:
+    # These are the latest ECS optimized AMIs as of March 2017:
     #
-    #   AMI:          2016.09.g
-    #   ECS agent:    1.14.1
-    #   Docker:       1.12.6
-    #   ecs-init:     1.14.1-1
+    #   AMI:          2017.03.b
+    #   ECS agent:    1.14.3
+    #   Docker:       17.03.1-ce
+    #   ecs-init:     1.14.3-1
     #
     # You can find the latest available on this page of our documentation:
     # http://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html
@@ -47,27 +47,27 @@ Mappings:
 
     AWSRegionToAMI:
         us-east-1:
-            AMIID: ami-275ffe31
+            AMIID: ami-0e297018
         us-east-2:
-            AMIID: ami-62745007
+            AMIID: ami-43d0f626
         us-west-1:
-            AMIID: ami-689bc208
+            AMIID: ami-fcd7f59c
         us-west-2:
-            AMIID: ami-62d35c02
+            AMIID: ami-596d6520
         eu-west-1:
-            AMIID: ami-95f8d2f3
+            AMIID: ami-5ae4f83c
         eu-west-2:
-            AMIID: ami-bf9481db
+            AMIID: ami-ada6b1c9
         eu-central-1:
-            AMIID: ami-085e8a67
+            AMIID: ami-25a4004a
         ap-northeast-1:
-            AMIID: ami-f63f6f91
+            AMIID: ami-3a000e5d
         ap-southeast-1:
-            AMIID: ami-b4ae1dd7
+            AMIID: ami-2428ab47
         ap-southeast-2:
-            AMIID: ami-fbe9eb98
+            AMIID: ami-ac5849cf
         ca-central-1:
-            AMIID: ami-ee58e58a
+            AMIID: ami-8cfb44e8
 
 Resources:
 
