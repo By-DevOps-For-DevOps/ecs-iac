@@ -442,6 +442,27 @@ Resources:
                   StackName: !Join ["-", ["Ref":"AWS::StackName", "ProdEnvironment-ECS"]]
                   ChangeSetName: ChangesToProdEcsCluster
                 RunOrder: '5'
+              - Name: Create-Scheduled-Scale-In
+                ActionTypeId:
+                  Category: Deploy
+                  Owner: AWS
+                  Provider: CloudFormation
+                  Version: '1'
+                InputArtifacts:
+                  - Name: TemplateSource
+                Configuration:
+                  ActionMode: CHANGE_SET_REPLACE
+                  Capabilities: CAPABILITY_NAMED_IAM
+                  RoleArn: !GetAtt [CFNRole, Arn]
+                  StackName: !Join ["-", ["Ref":"AWS::StackName", "ProdEnvironment-ECS"]]
+                  ChangeSetName: ChangesToProdEcsCluster
+                  TemplatePath: TemplateSource::scheduled-scale-in-ecs-service.yaml
+                  ParameterOverrides: !Sub |
+                    {
+                      "ClusterName": "${TagName}-Prod",
+                      
+                    }
+                RunOrder: '1'
           - !Ref AWS::NoValue
         - !If
             - IsProduction
