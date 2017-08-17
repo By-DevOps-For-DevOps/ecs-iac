@@ -32,9 +32,16 @@ Parameters:
         Type: AWS::EC2::KeyPair::KeyName
         Description: Name of an existing EC2 KeyPair to enable SSH access to the ECS instances.
 
-    EfsFileSystemId:
-        Description: EFS File System Id
+    VolumeName:
+        Description: The name to be used for the EFS volume
         Type: String
+        MinLength: '1'
+        Default: myEFSvolume
+    MountPoint:
+        Description: The Linux mount point for the EFS volume
+        Type: String
+        MinLength: '1'
+        Default: myEFSvolume
 
 Mappings:
 
@@ -74,6 +81,24 @@ Mappings:
             AMIID: ami-8cfb44e8
 
 Resources:
+
+    FileSystem:
+        Type: AWS::EFS::FileSystem
+        Properties:
+            PerformanceMode: generalPurpose
+            FileSystemTags:
+                - Key: Name
+                  Value: !Ref VolumeName
+    MountTarget:
+        Type: AWS::EFS::MountTarget
+        Properties:
+            FileSystemId:
+                Ref: FileSystem
+            SubnetId: 
+                Fn::ImportValue: !Sub "${EnvironmentName}-PrivateSubnet1"
+            SecurityGroups:
+                - Fn::ImportValue: !Sub "${EnvironmentName}-ECSHostSecurityGroup"
+
 
     ECSCluster:
         Type: AWS::ECS::Cluster
@@ -147,7 +172,7 @@ Resources:
                     EC2_AVAIL_ZONE="$(curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone)"
                     DIR_TGT="/mnt/efs"
                     mkdir "$DIR_TGT"
-                    DIR_SRC="$EC2_AVAIL_ZONE.${EfsFileSystemId}.efs.${AWS::Region}.amazonaws.com"
+                    DIR_SRC="$EC2_AVAIL_ZONE.${FileSystem}.efs.${AWS::Region}.amazonaws.com"
                     mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,soft,timeo=600,retrans=2 "$DIR_SRC:/" "$DIR_TGT"
                     cp -p "/etc/fstab" "/etc/fstab.back-$(date +%F)"
                     echo -e "$DIR_SRC:/ \t\t $DIR_TGT \t\t nfs \t\t nfsvers=4.1,rsize=1048576,wsize=1048576,soft,timeo=600,retrans=2 \t\t 0 \t\t 0" | tee -a /etc/fstab
