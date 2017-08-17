@@ -88,8 +88,8 @@ Resources:
             PerformanceMode: generalPurpose
             FileSystemTags:
                 - Key: Name
-                  Value: !Ref VolumeName
-    MountTarget:
+                  Value: !Sub ${EnvironmentName}-EFS
+    MountTarget1:
         Type: AWS::EFS::MountTarget
         Properties:
             FileSystemId:
@@ -98,7 +98,15 @@ Resources:
                 Fn::ImportValue: !Sub "${EnvironmentName}-PrivateSubnet1"
             SecurityGroups:
                 - Fn::ImportValue: !Sub "${EnvironmentName}-ECSHostSecurityGroup"
-
+    MountTarget2:
+        Type: AWS::EFS::MountTarget
+        Properties:
+            FileSystemId:
+                Ref: FileSystem
+            SubnetId: 
+                Fn::ImportValue: !Sub "${EnvironmentName}-PrivateSubnet2"
+            SecurityGroups:
+                - Fn::ImportValue: !Sub "${EnvironmentName}-ECSHostSecurityGroup"
 
     ECSCluster:
         Type: AWS::ECS::Cluster
