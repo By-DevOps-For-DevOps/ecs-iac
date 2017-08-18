@@ -119,6 +119,26 @@ Resources:
                       "EnvironmentName": "${TagName}-Dev"
                     }
                 RunOrder: '2'
+              - Name: Create-DevEFS
+                ActionTypeId:
+                  Category: Deploy
+                  Owner: AWS
+                  Provider: CloudFormation
+                  Version: '1'
+                InputArtifacts:
+                  - Name: TemplateSource
+                Configuration:
+                  ActionMode: REPLACE_ON_FAILURE
+                  Capabilities: CAPABILITY_NAMED_IAM
+                  RoleArn: !GetAtt [CFNRole, Arn]
+                  StackName: !Join ["-", ["Ref":"AWS::StackName", "DevEnvironment-EFS"]]
+                  TemplatePath: TemplateSource::efs.yaml
+                  TemplateConfiguration: TemplateSource::efs-config.json
+                  ParameterOverrides: !Sub |
+                    {
+                      "EnvironmentName": "${TagName}-Dev"
+                    }
+                RunOrder: '3'
               - Name: Create-DevEcs
                 ActionTypeId:
                   Category: Deploy
@@ -138,7 +158,7 @@ Resources:
                     {
                       "EnvironmentName": "${TagName}-Dev"
                     }
-                RunOrder: '3'
+                RunOrder: '4'
           - !Ref AWS::NoValue
         - !If
           - IsDevAndStaging
@@ -163,6 +183,7 @@ Resources:
                     {
                       "EnvironmentName": "${TagName}-Staging"
                     }
+                RunOrder: '1'
               - Name: Create-SG-ChangeSet
                 ActionTypeId:
                   Category: Deploy
@@ -177,6 +198,27 @@ Resources:
                   StackName: !Join ["-", ["Ref":"AWS::StackName", "StagingEnvironment-SecurityGroups"]]
                   ChangeSetName: ChangesToStagingSecurityGroups
                   TemplatePath: TemplateSource::security-groups.yaml
+                  ParameterOverrides: !Sub |
+                    {
+                      "EnvironmentName": "${TagName}-Staging"
+                    }
+                RunOrder: '1'
+              - Name: Create-EFS-ChangeSet
+                ActionTypeId:
+                  Category: Deploy
+                  Owner: AWS
+                  Provider: CloudFormation
+                  Version: '1'
+                InputArtifacts:
+                  - Name: TemplateSource
+                Configuration:
+                  ActionMode: CHANGE_SET_REPLACE
+                  Capabilities: CAPABILITY_NAMED_IAM
+                  RoleArn: !GetAtt [CFNRole, Arn]
+                  StackName: !Join ["-", ["Ref":"AWS::StackName", "StagingEnvironment-EFS"]]
+                  ChangeSetName: ChangesToStagingEFS
+                  TemplatePath: TemplateSource::efs.yaml
+                  TemplateConfiguration: TemplateSource::efs-config.json
                   ParameterOverrides: !Sub |
                     {
                       "EnvironmentName": "${TagName}-Staging"
@@ -237,6 +279,19 @@ Resources:
                   StackName: !Join ["-", ["Ref":"AWS::StackName", "StagingEnvironment-SecurityGroups"]]
                   ChangeSetName: ChangesToStagingSecurityGroups
                 RunOrder: '4'
+              - Name: Execute-EFS-ChangeSet
+                ActionTypeId:
+                  Category: Deploy
+                  Owner: AWS
+                  Provider: CloudFormation
+                  Version: '1'
+                Configuration:
+                  ActionMode: CHANGE_SET_EXECUTE
+                  Capabilities: CAPABILITY_NAMED_IAM
+                  RoleArn: !GetAtt [CFNRole, Arn]
+                  StackName: !Join ["-", ["Ref":"AWS::StackName", "StagingEnvironment-EFS"]]
+                  ChangeSetName: ChangesToStagingEFS
+                RunOrder: '5'
               - Name: Execute-ECS-ChangeSet
                 ActionTypeId:
                   Category: Deploy
@@ -249,7 +304,7 @@ Resources:
                   RoleArn: !GetAtt [CFNRole, Arn]
                   StackName: !Join ["-", ["Ref":"AWS::StackName", "StagingEnvironment-ECS"]]
                   ChangeSetName: ChangesToStagingEcsCluster
-                RunOrder: '5'
+                RunOrder: '6'
           - !Ref AWS::NoValue
         - !If
           - IsDevAndStaging
@@ -374,6 +429,27 @@ Resources:
                       "EnvironmentName": "${TagName}-Prod"
                     }
                 RunOrder: '1'
+              - Name: Create-EFS-ChangeSet
+                ActionTypeId:
+                  Category: Deploy
+                  Owner: AWS
+                  Provider: CloudFormation
+                  Version: '1'
+                InputArtifacts:
+                  - Name: TemplateSource
+                Configuration:
+                  ActionMode: CHANGE_SET_REPLACE
+                  Capabilities: CAPABILITY_NAMED_IAM
+                  RoleArn: !GetAtt [CFNRole, Arn]
+                  StackName: !Join ["-", ["Ref":"AWS::StackName", "ProdEnvironment-EFS"]]
+                  ChangeSetName: ChangesToProdEFS
+                  TemplatePath: TemplateSource::efs.yaml
+                  TemplateConfiguration: TemplateSource::efs-config.json
+                  ParameterOverrides: !Sub |
+                    {
+                      "EnvironmentName": "${TagName}-Prod"
+                    }
+                RunOrder: '1'
               - Name: Create-ECS-ChangeSet
                 ActionTypeId:
                   Category: Deploy
@@ -429,6 +505,19 @@ Resources:
                   StackName: !Join ["-", ["Ref":"AWS::StackName", "ProdEnvironment-SecurityGroups"]]
                   ChangeSetName: ChangesToProdSecurityGroups
                 RunOrder: '4'
+              - Name: Execute-EFS-ChangeSet
+                ActionTypeId:
+                  Category: Deploy
+                  Owner: AWS
+                  Provider: CloudFormation
+                  Version: '1'
+                Configuration:
+                  ActionMode: CHANGE_SET_EXECUTE
+                  Capabilities: CAPABILITY_NAMED_IAM
+                  RoleArn: !GetAtt [CFNRole, Arn]
+                  StackName: !Join ["-", ["Ref":"AWS::StackName", "ProdEnvironment-EFS"]]
+                  ChangeSetName: ChangesToProdEFS
+                RunOrder: '5'
               - Name: Execute-ECS-ChangeSet
                 ActionTypeId:
                   Category: Deploy
@@ -441,7 +530,7 @@ Resources:
                   RoleArn: !GetAtt [CFNRole, Arn]
                   StackName: !Join ["-", ["Ref":"AWS::StackName", "ProdEnvironment-ECS"]]
                   ChangeSetName: ChangesToProdEcsCluster
-                RunOrder: '5'
+                RunOrder: '6'
           - !Ref AWS::NoValue
         - !If
             - IsProduction
