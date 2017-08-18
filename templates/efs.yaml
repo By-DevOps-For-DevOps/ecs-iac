@@ -1,0 +1,41 @@
+Description: >
+    This template deploys an EFS
+
+Parameters:
+
+    EnvironmentName:
+        Description: An environment name that will be prefixed to resource names
+        Type: String
+
+Resources:
+
+    FileSystem:
+        Type: AWS::EFS::FileSystem
+        Properties:
+            PerformanceMode: generalPurpose
+            FileSystemTags:
+            - Key: Name
+              Value: !Sub "${EnvironmentName}-efs"
+    MountTarget1:
+        Type: AWS::EFS::MountTarget
+        Properties:
+            FileSystemId: !Ref FileSystem
+            SubnetId:
+              Fn::ImportValue: !Sub "${EnvironmentName}-PrivateSubnet1"
+            SecurityGroups:
+            - Fn::ImportValue: !Sub "${EnvironmentName}-ECSHostSecurityGroup"
+    MountTarget2:
+        Type: AWS::EFS::MountTarget
+        Properties:
+            FileSystemId: !Ref FileSystem
+            SubnetId:
+              Fn::ImportValue: !Sub "${EnvironmentName}-PrivateSubnet2"
+            SecurityGroups:
+            - Fn::ImportValue: !Sub "${EnvironmentName}-ECSHostSecurityGroup"
+Outputs:
+
+    FileSystemID:
+        Description: A reference to the created VPC
+        Value: !Ref FileSystem
+        Export:
+            Name: !Sub ${EnvironmentName}-FileSystemID
