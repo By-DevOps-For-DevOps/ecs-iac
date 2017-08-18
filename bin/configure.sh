@@ -14,7 +14,7 @@ if [[ -z "$AWS_REGION" ]]; then
 fi
 
 cd templates
-zip -r templates.zip ./*
+zip -r templates.zip ./* -x *~
 aws s3 cp templates.zip s3://${S3_BUCKET_NAME}/
 rm templates.zip
 cp ../infrastructure-pipeline.yaml .
