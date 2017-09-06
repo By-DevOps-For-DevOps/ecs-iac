@@ -123,6 +123,7 @@ Resources:
                         yum install -y aws-cfn-bootstrap python34
                         /opt/aws/bin/cfn-init -v --region ${AWS::Region} --stack ${AWS::StackName} --resource ECSLaunchConfiguration
                         /opt/aws/bin/cfn-signal -e $? --region ${AWS::Region} --stack ${AWS::StackName} --resource ECSAutoScalingGroup
+                        echo ECS_AVAILABLE_LOGGING_DRIVERS='["json-file","syslog","gelf","awslogs"]' >> /etc/ecs/ecs.config
                         curl -O https://bootstrap.pypa.io/get-pip.py
                         python3 /get-pip.py
                         /usr/local/bin/pip install awscli
