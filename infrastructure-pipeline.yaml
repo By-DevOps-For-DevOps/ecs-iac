@@ -342,6 +342,28 @@ Resources:
                   RoleArn: !GetAtt [CFNRole, Arn]
                   StackName: !Join ["-", ["Ref":"AWS::StackName", "StagingEnvironment-ECS"]]
                 RunOrder: '2'
+              - Name: Delete-EFS-Dev
+                ActionTypeId:
+                  Category: Deploy
+                  Owner: AWS
+                  Provider: CloudFormation
+                  Version: '1'
+                Configuration:
+                  ActionMode: DELETE_ONLY
+                  RoleArn: !GetAtt [CFNRole, Arn]
+                  StackName: !Join ["-", ["Ref":"AWS::StackName", "DevEnvironment-EFS"]]
+                RunOrder: '3'
+              - Name: Delete-EFS-Stag
+                ActionTypeId:
+                  Category: Deploy
+                  Owner: AWS
+                  Provider: CloudFormation
+                  Version: '1'
+                Configuration:
+                  ActionMode: DELETE_ONLY
+                  RoleArn: !GetAtt [CFNRole, Arn]
+                  StackName: !Join ["-", ["Ref":"AWS::StackName", "StagingEnvironment-EFS"]]
+                RunOrder: '3'
               - Name: Delete-Security-Groups-Dev
                 ActionTypeId:
                   Category: Deploy
@@ -352,7 +374,7 @@ Resources:
                   ActionMode: DELETE_ONLY
                   RoleArn: !GetAtt [CFNRole, Arn]
                   StackName: !Join ["-", ["Ref":"AWS::StackName", "DevEnvironment-SecurityGroups"]]
-                RunOrder: '3'
+                RunOrder: '4'
               - Name: Delete-Security-Groups-Stag
                 ActionTypeId:
                   Category: Deploy
@@ -363,7 +385,7 @@ Resources:
                   ActionMode: DELETE_ONLY
                   RoleArn: !GetAtt [CFNRole, Arn]
                   StackName: !Join ["-", ["Ref":"AWS::StackName", "StagingEnvironment-SecurityGroups"]]
-                RunOrder: '3'
+                RunOrder: '4'
               - Name: Delete-VPC-Dev
                 ActionTypeId:
                   Category: Deploy
@@ -374,7 +396,7 @@ Resources:
                   ActionMode: DELETE_ONLY
                   RoleArn: !GetAtt [CFNRole, Arn]
                   StackName: !Join ["-", ["Ref":"AWS::StackName", "DevEnvironment-VPC"]]
-                RunOrder: '4'
+                RunOrder: '5'
               - Name: Delete-VPC-Stag
                 ActionTypeId:
                   Category: Deploy
@@ -385,7 +407,7 @@ Resources:
                   ActionMode: DELETE_ONLY
                   RoleArn: !GetAtt [CFNRole, Arn]
                   StackName: !Join ["-", ["Ref":"AWS::StackName", "StagingEnvironment-VPC"]]
-                RunOrder: '4'
+                RunOrder: '5'
           - !Ref AWS::NoValue
         - !If
           - IsProduction
@@ -577,6 +599,17 @@ Resources:
                     RoleArn: !GetAtt [CFNRole, Arn]
                     StackName: !Join ["-", ["Ref":"AWS::StackName", "ProdEnvironment-ECS"]]
                   RunOrder: '2'
+                - Name: Delete-Prod-EFS
+                  ActionTypeId:
+                    Category: Deploy
+                    Owner: AWS
+                    Provider: CloudFormation
+                    Version: '1'
+                  Configuration:
+                    ActionMode: DELETE_ONLY
+                    RoleArn: !GetAtt [CFNRole, Arn]
+                    StackName: !Join ["-", ["Ref":"AWS::StackName", "ProdEnvironment-EFS"]]
+                  RunOrder: '3'
                 - Name: Delete-Security-Groups-Prod
                   ActionTypeId:
                     Category: Deploy
@@ -587,7 +620,7 @@ Resources:
                     ActionMode: DELETE_ONLY
                     RoleArn: !GetAtt [CFNRole, Arn]
                     StackName: !Join ["-", ["Ref":"AWS::StackName", "ProdEnvironment-SecurityGroups"]]
-                  RunOrder: '3'
+                  RunOrder: '4'
                 - Name: Delete-VPC-Prod
                   ActionTypeId:
                     Category: Deploy
@@ -598,7 +631,7 @@ Resources:
                     ActionMode: DELETE_ONLY
                     RoleArn: !GetAtt [CFNRole, Arn]
                     StackName: !Join ["-", ["Ref":"AWS::StackName", "ProdEnvironment-VPC"]]
-                  RunOrder: '4'
+                  RunOrder: '5'
             - !Ref AWS::NoValue
 
 
