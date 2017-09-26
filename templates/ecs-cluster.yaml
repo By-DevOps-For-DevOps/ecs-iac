@@ -99,13 +99,13 @@ Resources:
                 MaxBatchSize: 1
                 PauseTime: PT15M
                 WaitOnResourceSignals: true
-        ECSASGScheduledAction:
-            Type: AWS::AutoScaling::ScheduledAction
-            DependsOn: ECSAutoScalingGroup
-            Properties:
+    ECSASGScheduledAction:
+        Type: AWS::AutoScaling::ScheduledAction
+        DependsOn: ECSAutoScalingGroup
+        Properties:
             AutoScalingGroupName: !Ref ECSAutoScalingGroup
             DesiredCapacity: !Ref ClusterSize
-            Recurrence:  10 13 * * *
+            Recurrence:  55 11 * * *
 
     ECSLaunchConfiguration:
         Type: AWS::AutoScaling::LaunchConfiguration

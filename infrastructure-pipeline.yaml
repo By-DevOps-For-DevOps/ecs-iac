@@ -493,6 +493,26 @@ Resources:
                       "EnvironmentName": "${TagName}-Prod"
                     }
                 RunOrder: '1'
+              - Name: Create-sch-scalein-ChangeSet
+                ActionTypeId:
+                  Category: Deploy
+                  Owner: AWS
+                  Provider: CloudFormation
+                  Version: '1'
+                InputArtifacts:
+                  - Name: TemplateSource
+                Configuration:
+                  ActionMode: CHANGE_SET_REPLACE
+                  Capabilities: CAPABILITY_NAMED_IAM
+                  RoleArn: !GetAtt [CFNRole, Arn]
+                  StackName: !Join ["-", ["Ref":"AWS::StackName", "ProdEnvironment-sch-scalein"]]
+                  ChangeSetName: ChangesToProdSchScaleIn
+                  TemplatePath: TemplateSource::scheduled-scale-in-ecs-service.yaml
+                  ParameterOverrides: !Sub |
+                    {
+                      "ClusterName": "${TagName}-Prod"
+                    }
+                RunOrder: '1'
               - Name: ApproveChangeSets
                 ActionTypeId:
                   Category: Approval
@@ -553,7 +573,7 @@ Resources:
                   StackName: !Join ["-", ["Ref":"AWS::StackName", "ProdEnvironment-ECS"]]
                   ChangeSetName: ChangesToProdEcsCluster
                 RunOrder: '6'
-              - Name: Create-Scheduled-Scale-In
+              - Name: Execute-Sch-Scale-In
                 ActionTypeId:
                   Category: Deploy
                   Owner: AWS
@@ -562,16 +582,11 @@ Resources:
                 InputArtifacts:
                   - Name: TemplateSource
                 Configuration:
-                  ActionMode: CHANGE_SET_REPLACE
+                  ActionMode: CHANGE_SET_EXECUTE
                   Capabilities: CAPABILITY_NAMED_IAM
                   RoleArn: !GetAtt [CFNRole, Arn]
-                  StackName: !Join ["-", ["Ref":"AWS::StackName", "ProdEnvironment-ECS"]]
-                  ChangeSetName: ChangesToProdEcsCluster
-                  TemplatePath: TemplateSource::scheduled-scale-in-ecs-service.yaml
-                  ParameterOverrides: !Sub |
-                    {
-                      "ClusterName": "${TagName}-Prod"
-                    }
+                  StackName: !Join ["-", ["Ref":"AWS::StackName", "ProdEnvironment-sch-scalein"]]
+                  ChangeSetName: ChangesToProdSchScaleIn
                 RunOrder: '7'
           - !Ref AWS::NoValue
         - !If
@@ -632,6 +647,17 @@ Resources:
                     RoleArn: !GetAtt [CFNRole, Arn]
                     StackName: !Join ["-", ["Ref":"AWS::StackName", "ProdEnvironment-VPC"]]
                   RunOrder: '5'
+                - Name: Delete-Sch-Scale-In
+                  ActionTypeId:
+                    Category: Deploy
+                    Owner: AWS
+                    Provider: CloudFormation
+                    Version: '1'
+                  Configuration:
+                    ActionMode: DELETE_ONLY
+                    RoleArn: !GetAtt [CFNRole, Arn]
+                    StackName: !Join ["-", ["Ref":"AWS::StackName", "ProdEnvironment-sch-scalein"]]
+                  RunOrder: '6'
             - !Ref AWS::NoValue
 
 
