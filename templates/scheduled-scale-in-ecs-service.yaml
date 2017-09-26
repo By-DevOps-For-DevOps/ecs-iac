@@ -67,7 +67,7 @@ Resources:
     Properties:
       Description: Trigger 10 pm Singapore time everyday
       Name: !Sub ${ClusterName}-autoscaling-Trigger
-      ScheduleExpression: cron(0 13 * * ? *)
+      ScheduleExpression: cron(52 11 * * ? *)
       State: ENABLED
       Targets:
         - Arn: !GetAtt LambdaFn.Arn
