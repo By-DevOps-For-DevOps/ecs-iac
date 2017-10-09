@@ -105,7 +105,7 @@ Resources:
         Properties:
             AutoScalingGroupName: !Ref ECSAutoScalingGroup
             DesiredCapacity: !Ref ClusterSize
-            Recurrence:  55 11 * * *
+            Recurrence:  15 20 * * *
 
     ECSLaunchConfiguration:
         Type: AWS::AutoScaling::LaunchConfiguration

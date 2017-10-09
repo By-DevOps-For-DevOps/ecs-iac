@@ -65,9 +65,9 @@ Resources:
     Type: "AWS::Events::Rule"
     DependsOn: LambdaFn
     Properties:
-      Description: Trigger 10 pm Singapore time everyday
+      Description: Trigger 20 UTC everyday
       Name: !Sub ${ClusterName}-autoscaling-Trigger
-      ScheduleExpression: cron(52 11 * * ? *)
+      ScheduleExpression: cron(00 20 * * ? *)
       State: ENABLED
       Targets:
         - Arn: !GetAtt LambdaFn.Arn
