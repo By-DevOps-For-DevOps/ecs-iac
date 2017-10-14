@@ -16,7 +16,7 @@ Parameters:
     InstanceDockerVolume:
         Description: Addition volume size required for docker storage
         Type: Number
-        Default: 150
+        Default: 0
 
     ClusterSize:
         Description: How many ECS hosts do you want to initially deploy?
@@ -32,6 +32,8 @@ Parameters:
         Type: AWS::EC2::KeyPair::KeyName
         Description: Name of an existing EC2 KeyPair to enable SSH access to the ECS instances.
 
+Conditions:
+    IsNeedVolume: !Not [!Equals [!Ref InstanceDockerVolume, 0]]
 
 Mappings:
 
@@ -114,10 +116,13 @@ Resources:
             InstanceType: !Ref InstanceType
             KeyName: !Ref 'KeyName'
             BlockDeviceMappings:
-                - DeviceName: "/dev/xvdcz"
-                  Ebs:
-                    VolumeSize: !Ref InstanceDockerVolume
-                    VolumeType: 'gp2'
+                - !If
+                    - IsNeedVolume
+                    - DeviceName: "/dev/xvdcz"
+                      Ebs:
+                        VolumeSize: !Ref InstanceDockerVolume
+                        VolumeType: 'gp2'
+                    - !Ref AWS::NoValue
             SecurityGroups:
                 - Fn::ImportValue: !Sub "${EnvironmentName}-ECSHostSecurityGroup"
             IamInstanceProfile: !Ref ECSInstanceProfile
