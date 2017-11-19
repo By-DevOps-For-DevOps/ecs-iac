@@ -39,10 +39,10 @@ Mappings:
 
     # These are the latest ECS optimized AMIs as of March 2017:
     #
-    #   AMI:          2017.03.b
-    #   ECS agent:    1.14.5
-    #   Docker:       17.03.2-ce
-    #   ecs-init:     1.14.5-1
+    #   AMI:          2017.09.c
+    #   ECS agent:    1.15.2
+    #   Docker:       17.06.2-ce
+    #   ecs-init:     1.15.2-1
     #
     # You can find the latest available on this page of our documentation:
     # http://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html
@@ -50,29 +50,29 @@ Mappings:
 
     AWSRegionToAMI:
         us-east-2:
-            AMIID: ami-34032e51
+            AMIID: ami-6e56780b
         us-east-1:
-            AMIID: ami-ec33cc96
+            AMIID: ami-6944c513
         us-west-2:
-            AMIID: ami-29f80351
+            AMIID: ami-f5fc2c8d
         us-west-1:
-            AMIID: ami-d5d0e0b5
+            AMIID: ami-bbe6dfdb
         eu-west-2:
-            AMIID: ami-eb62708f
+            AMIID: ami-e36b7487
         eu-west-1:
-            AMIID: ami-13f7226a
+            AMIID: ami-faa10a83
         eu-central-1:
-            AMIID: ami-40d5672f
+            AMIID: ami-1f9f1f70
         ap-northeast-2:
-            AMIID: ami-7ee13b10
+            AMIID: ami-88f85fe6
         ap-northeast-1:
-            AMIID: ami-21815747
+            AMIID: ami-cb3a8cad
         ap-southeast-2:
-            AMIID: ami-4f08e82d
+            AMIID: ami-a9a14acb
         ap-southeast-1:
-            AMIID: ami-99f588fa
+            AMIID: ami-ca3762a9
         ca-central-1:
-            AMIID: ami-9b54edff
+            AMIID: ami-cace75ae
 
 Resources:
     ECSCluster:
