@@ -159,6 +159,25 @@ Resources:
                       "EnvironmentName": "${TagName}-Dev"
                     }
                 RunOrder: '4'
+              - Name: Create-Dev-sch-scalein-ChangeSet
+                ActionTypeId:
+                  Category: Deploy
+                  Owner: AWS
+                  Provider: CloudFormation
+                  Version: '1'
+                InputArtifacts:
+                  - Name: TemplateSource
+                Configuration:
+                  ActionMode: REPLACE_ON_FAILURE
+                  Capabilities: CAPABILITY_NAMED_IAM
+                  RoleArn: !GetAtt [CFNRole, Arn]
+                  StackName: !Join ["-", ["Ref":"AWS::StackName", "DevEnvironment-sch-scalein"]]
+                  TemplatePath: TemplateSource::scheduled-scale-in-ecs-service.yaml
+                  ParameterOverrides: !Sub |
+                    {
+                      "ClusterName": "${TagName}-Dev"
+                    }
+                RunOrder: '5'
           - !Ref AWS::NoValue
         - !If
           - IsDevAndStaging
@@ -245,6 +264,26 @@ Resources:
                       "EnvironmentName": "${TagName}-Staging"
                     }
                 RunOrder: '1'
+              - Name: Create-Stag-sch-scalein-ChangeSet
+                ActionTypeId:
+                  Category: Deploy
+                  Owner: AWS
+                  Provider: CloudFormation
+                  Version: '1'
+                InputArtifacts:
+                  - Name: TemplateSource
+                Configuration:
+                  ActionMode: CHANGE_SET_REPLACE
+                  Capabilities: CAPABILITY_NAMED_IAM
+                  RoleArn: !GetAtt [CFNRole, Arn]
+                  StackName: !Join ["-", ["Ref":"AWS::StackName", "StagingEnvironment-sch-scalein"]]
+                  ChangeSetName: ChangesToStagingSchScaleIn
+                  TemplatePath: TemplateSource::scheduled-scale-in-ecs-service.yaml
+                  ParameterOverrides: !Sub |
+                    {
+                      "ClusterName": "${TagName}-Prod"
+                    }
+                RunOrder: '1'
               - Name: ApproveChangeSets
                 ActionTypeId:
                   Category: Approval
@@ -305,6 +344,21 @@ Resources:
                   StackName: !Join ["-", ["Ref":"AWS::StackName", "StagingEnvironment-ECS"]]
                   ChangeSetName: ChangesToStagingEcsCluster
                 RunOrder: '6'
+              - Name: Execute-Sch-Scale-In
+                ActionTypeId:
+                  Category: Deploy
+                  Owner: AWS
+                  Provider: CloudFormation
+                  Version: '1'
+                InputArtifacts:
+                  - Name: TemplateSource
+                Configuration:
+                  ActionMode: CHANGE_SET_EXECUTE
+                  Capabilities: CAPABILITY_NAMED_IAM
+                  RoleArn: !GetAtt [CFNRole, Arn]
+                  StackName: !Join ["-", ["Ref":"AWS::StackName", "StagingEnvironment-sch-scalein"]]
+                  ChangeSetName: ChangesToStagingSchScaleIn
+                RunOrder: '7'
           - !Ref AWS::NoValue
         - !If
           - IsDevAndStaging
@@ -342,6 +396,28 @@ Resources:
                   RoleArn: !GetAtt [CFNRole, Arn]
                   StackName: !Join ["-", ["Ref":"AWS::StackName", "StagingEnvironment-ECS"]]
                 RunOrder: '2'
+              - Name: Delete-EFS-Dev
+                ActionTypeId:
+                  Category: Deploy
+                  Owner: AWS
+                  Provider: CloudFormation
+                  Version: '1'
+                Configuration:
+                  ActionMode: DELETE_ONLY
+                  RoleArn: !GetAtt [CFNRole, Arn]
+                  StackName: !Join ["-", ["Ref":"AWS::StackName", "DevEnvironment-EFS"]]
+                RunOrder: '3'
+              - Name: Delete-EFS-Stag
+                ActionTypeId:
+                  Category: Deploy
+                  Owner: AWS
+                  Provider: CloudFormation
+                  Version: '1'
+                Configuration:
+                  ActionMode: DELETE_ONLY
+                  RoleArn: !GetAtt [CFNRole, Arn]
+                  StackName: !Join ["-", ["Ref":"AWS::StackName", "StagingEnvironment-EFS"]]
+                RunOrder: '3'
               - Name: Delete-Security-Groups-Dev
                 ActionTypeId:
                   Category: Deploy
@@ -352,7 +428,7 @@ Resources:
                   ActionMode: DELETE_ONLY
                   RoleArn: !GetAtt [CFNRole, Arn]
                   StackName: !Join ["-", ["Ref":"AWS::StackName", "DevEnvironment-SecurityGroups"]]
-                RunOrder: '3'
+                RunOrder: '4'
               - Name: Delete-Security-Groups-Stag
                 ActionTypeId:
                   Category: Deploy
@@ -363,7 +439,7 @@ Resources:
                   ActionMode: DELETE_ONLY
                   RoleArn: !GetAtt [CFNRole, Arn]
                   StackName: !Join ["-", ["Ref":"AWS::StackName", "StagingEnvironment-SecurityGroups"]]
-                RunOrder: '3'
+                RunOrder: '4'
               - Name: Delete-VPC-Dev
                 ActionTypeId:
                   Category: Deploy
@@ -374,7 +450,7 @@ Resources:
                   ActionMode: DELETE_ONLY
                   RoleArn: !GetAtt [CFNRole, Arn]
                   StackName: !Join ["-", ["Ref":"AWS::StackName", "DevEnvironment-VPC"]]
-                RunOrder: '4'
+                RunOrder: '5'
               - Name: Delete-VPC-Stag
                 ActionTypeId:
                   Category: Deploy
@@ -385,7 +461,29 @@ Resources:
                   ActionMode: DELETE_ONLY
                   RoleArn: !GetAtt [CFNRole, Arn]
                   StackName: !Join ["-", ["Ref":"AWS::StackName", "StagingEnvironment-VPC"]]
-                RunOrder: '4'
+                RunOrder: '5'
+              - Name: Delete-Sch-Scale-In-Dev
+                ActionTypeId:
+                  Category: Deploy
+                  Owner: AWS
+                  Provider: CloudFormation
+                  Version: '1'
+                Configuration:
+                  ActionMode: DELETE_ONLY
+                  RoleArn: !GetAtt [CFNRole, Arn]
+                  StackName: !Join ["-", ["Ref":"AWS::StackName", "StagingEnvironment-sch-scalein"]]
+                RunOrder: '6'
+              - Name: Delete-Sch-Scale-In-Stage
+                ActionTypeId:
+                  Category: Deploy
+                  Owner: AWS
+                  Provider: CloudFormation
+                  Version: '1'
+                Configuration:
+                  ActionMode: DELETE_ONLY
+                  RoleArn: !GetAtt [CFNRole, Arn]
+                  StackName: !Join ["-", ["Ref":"AWS::StackName", "StagingEnvironment-sch-scalein"]]
+                RunOrder: '6'
           - !Ref AWS::NoValue
         - !If
           - IsProduction
@@ -471,6 +569,26 @@ Resources:
                       "EnvironmentName": "${TagName}-Prod"
                     }
                 RunOrder: '1'
+              - Name: Create-sch-scalein-ChangeSet
+                ActionTypeId:
+                  Category: Deploy
+                  Owner: AWS
+                  Provider: CloudFormation
+                  Version: '1'
+                InputArtifacts:
+                  - Name: TemplateSource
+                Configuration:
+                  ActionMode: CHANGE_SET_REPLACE
+                  Capabilities: CAPABILITY_NAMED_IAM
+                  RoleArn: !GetAtt [CFNRole, Arn]
+                  StackName: !Join ["-", ["Ref":"AWS::StackName", "ProdEnvironment-sch-scalein"]]
+                  ChangeSetName: ChangesToProdSchScaleIn
+                  TemplatePath: TemplateSource::scheduled-scale-in-ecs-service.yaml
+                  ParameterOverrides: !Sub |
+                    {
+                      "ClusterName": "${TagName}-Prod"
+                    }
+                RunOrder: '1'
               - Name: ApproveChangeSets
                 ActionTypeId:
                   Category: Approval
@@ -531,6 +649,21 @@ Resources:
                   StackName: !Join ["-", ["Ref":"AWS::StackName", "ProdEnvironment-ECS"]]
                   ChangeSetName: ChangesToProdEcsCluster
                 RunOrder: '6'
+              - Name: Execute-Sch-Scale-In
+                ActionTypeId:
+                  Category: Deploy
+                  Owner: AWS
+                  Provider: CloudFormation
+                  Version: '1'
+                InputArtifacts:
+                  - Name: TemplateSource
+                Configuration:
+                  ActionMode: CHANGE_SET_EXECUTE
+                  Capabilities: CAPABILITY_NAMED_IAM
+                  RoleArn: !GetAtt [CFNRole, Arn]
+                  StackName: !Join ["-", ["Ref":"AWS::StackName", "ProdEnvironment-sch-scalein"]]
+                  ChangeSetName: ChangesToProdSchScaleIn
+                RunOrder: '7'
           - !Ref AWS::NoValue
         - !If
             - IsProduction
@@ -557,6 +690,17 @@ Resources:
                     RoleArn: !GetAtt [CFNRole, Arn]
                     StackName: !Join ["-", ["Ref":"AWS::StackName", "ProdEnvironment-ECS"]]
                   RunOrder: '2'
+                - Name: Delete-Prod-EFS
+                  ActionTypeId:
+                    Category: Deploy
+                    Owner: AWS
+                    Provider: CloudFormation
+                    Version: '1'
+                  Configuration:
+                    ActionMode: DELETE_ONLY
+                    RoleArn: !GetAtt [CFNRole, Arn]
+                    StackName: !Join ["-", ["Ref":"AWS::StackName", "ProdEnvironment-EFS"]]
+                  RunOrder: '3'
                 - Name: Delete-Security-Groups-Prod
                   ActionTypeId:
                     Category: Deploy
@@ -567,7 +711,7 @@ Resources:
                     ActionMode: DELETE_ONLY
                     RoleArn: !GetAtt [CFNRole, Arn]
                     StackName: !Join ["-", ["Ref":"AWS::StackName", "ProdEnvironment-SecurityGroups"]]
-                  RunOrder: '3'
+                  RunOrder: '4'
                 - Name: Delete-VPC-Prod
                   ActionTypeId:
                     Category: Deploy
@@ -578,7 +722,18 @@ Resources:
                     ActionMode: DELETE_ONLY
                     RoleArn: !GetAtt [CFNRole, Arn]
                     StackName: !Join ["-", ["Ref":"AWS::StackName", "ProdEnvironment-VPC"]]
-                  RunOrder: '4'
+                  RunOrder: '5'
+                - Name: Delete-Sch-Scale-In
+                  ActionTypeId:
+                    Category: Deploy
+                    Owner: AWS
+                    Provider: CloudFormation
+                    Version: '1'
+                  Configuration:
+                    ActionMode: DELETE_ONLY
+                    RoleArn: !GetAtt [CFNRole, Arn]
+                    StackName: !Join ["-", ["Ref":"AWS::StackName", "ProdEnvironment-sch-scalein"]]
+                  RunOrder: '6'
             - !Ref AWS::NoValue
 
 
