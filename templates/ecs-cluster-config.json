@@ -5,6 +5,7 @@
     "ClusterSize" : "1",
     "ClusterMaxSize" : "5",
     "InstanceDockerVolume": "0",
-    "KeyName" : "ngp-v301-dev-stag"
+    "KeyName" : "ngp-v301-dev-stag",
+    "IncludeEFS" : "false"
   }
 }
