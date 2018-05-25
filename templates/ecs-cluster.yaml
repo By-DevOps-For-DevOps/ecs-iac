@@ -117,13 +117,6 @@ Resources:
                 WaitOnResourceSignals: true
                 SuspendProcesses:
                     - ScheduledActions
-    ECSASGScheduledAction:
-        Type: AWS::AutoScaling::ScheduledAction
-        DependsOn: ECSAutoScalingGroup
-        Properties:
-            AutoScalingGroupName: !Ref ECSAutoScalingGroup
-            DesiredCapacity: !Ref ClusterSize
-            Recurrence:  15 20 * * *
 
     ECSLaunchConfiguration:
         Type: AWS::AutoScaling::LaunchConfiguration
@@ -323,22 +316,30 @@ Resources:
                     Ref: ECSCluster
             ComparisonOperator: GreaterThanThreshold
             MetricName: CPUReservation
-    ECSMemoryScaleUpAlarm:
+    ECSScaleDownPolicy:
+        Type: AWS::AutoScaling::ScalingPolicy
+        Properties:
+            AdjustmentType: ChangeInCapacity
+            AutoScalingGroupName:
+                Ref: ECSAutoScalingGroup
+            Cooldown: '300'
+            ScalingAdjustment: '-1'
+    ECSCPUScaleDownAlarm:
         Type: AWS::CloudWatch::Alarm
         Properties:
             EvaluationPeriods: '1'
             Statistic: Average
-            Threshold: '80'
-            AlarmDescription: Alarm if ECS Cluster Memory reservation goes above 80
+            Threshold: '20'
+            AlarmDescription: Alarm if ECS Cluster CPU reservation goes below 20
             Period: '300'
-            AlarmActions: [!Ref 'ECSScaleUpPolicy']
+            AlarmActions: [!Ref 'ECSScaleDownPolicy']
             Namespace: AWS/ECS
             Dimensions:
-              - Name: ClusterName
+            -   Name: ClusterName
                 Value:
                     Ref: ECSCluster
-            ComparisonOperator: GreaterThanThreshold
-            MetricName: MemoryReservation
+            ComparisonOperator: LessThanThreshold
+            MetricName: CPUReservation
 Outputs:
 
     Cluster:
