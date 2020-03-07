@@ -45,10 +45,10 @@ Mappings:
 
     # These are the latest ECS optimized AMIs as of March 2017:
     #
-    #   AMI:          2017.09.e
-    #   ECS agent:    1.16.1
-    #   Docker:       17.06.2-ce
-    #   ecs-init:     1.16.1-1
+    #   AMI:          20200218
+    #   ECS agent:    1.37.0
+    #   Docker:       18.09.9-ce
+    #   ecs-init:     1.37.0-2
     #
     # You can find the latest available on this page of our documentation:
     # http://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html
@@ -56,35 +56,35 @@ Mappings:
 
     AWSRegionToAMI:
         us-east-2:
-            AMIID: ami-901338f5
+            AMIID: ami-0c4cebb41c1f9aafc
         us-east-1:
-            AMIID: ami-13401669
-        us-west-2:
-            AMIID: ami-9a02a9e2
+            AMIID: ami-0612c83237c57eea9
         us-west-1:
-            AMIID: ami-b3adacd3
-        eu-west-3:
-            AMIID: ami-bd10a7c0
-        eu-west-2:
-            AMIID: ami-acd5cdc8
+            AMIID: ami-01ddc4e74b857d42f
+        us-west-2:
+            AMIID: ami-0361eab2705e30d4a
         eu-west-1:
-            AMIID: ami-7827b301
+            AMIID: ami-0d1572f523b3f9f74
+        eu-west-2:
+            AMIID: ami-0b6996c14e6912aeb
+        eu-west-3:
+            AMIID: ami-0c6484e862f7509c3
         eu-central-1:
-            AMIID: ami-b378e8dc
-        ap-northeast-2:
-            AMIID: ami-d6f454b8
+            AMIID: ami-067a0bc8aa37e5843
         ap-northeast-1:
-            AMIID: ami-af46dbc9
-        ap-southeast-2:
-            AMIID: ami-b88e7cda
+            AMIID: ami-0b07a6e4735fb50c9
+        ap-northeast-2:
+            AMIID: ami-00c723a006da425f4
         ap-southeast-1:
-            AMIID: ami-fec3b482
+            AMIID: ami-07d57c0aef2097f15
+        ap-southeast-2:
+            AMIID: ami-0e72d45bc721aaa38
         ca-central-1:
-            AMIID: ami-e8cb4e8c
+            AMIID: ami-05f3d80c6c53dc654
         ap-south-1:
-            AMIID: ami-c80b5fa7
+            AMIID: ami-0e13e0df31e6aa478
         sa-east-1:
-            AMIID: ami-ca95d6a6
+            AMIID: ami-01c5b55b7a3c35744
 
 Resources:
     ECSCluster:
