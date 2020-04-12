@@ -13,12 +13,12 @@ The pipeline uses the artifact to automatically create stacks and change sets.
 - ECS Cluster
 - Security groups for ECS cluster and Loadbalancer
 
-## Steps
+## Steps to setup
 
 1. Go the AWS region where we need to deploy the infrastructure
 1. Create your artifact S3 bucket
     - Enable Versioning on artifact bucket
-    - Choose region same as your cloudfromation stack. E.g. `ngp-v200-dev-stag` for Development and Staging environment or `ngp-v200-prod` for Production environment.
+    - Choose region same as your cloudfromation stack. E.g. `ngp-v300-dev-stag` for Development and Staging environment or `ngp-v300-prod` for Production environment.
 1. Clone the repo:
    `git clone https://github.com/microservices-today/ngp-infrastructure-codepipeline.git`
    `cd ngp-infrastructure-codepipeline`
@@ -39,3 +39,10 @@ The pipeline uses the artifact to automatically create stacks and change sets.
 1. Confirm SNS subscription
     - Confirmation e-maill will be arrived in your e-mail box.
 1. Go to CodePipeline Console, and approve Changesets.
+
+## Steps to upgrade
+1. Download `templates.zip` file from your S3 bucket where you store your CloudFormation source artifact (e.g. `ngp-v300-dev-stag`).
+1. Unzip `templates` file. Copy `templates/ecs-cluster-config.json` and `templates/network-config.json` files into `templates` folder of this repo. It should overwrite existing default parameter files.
+1. Make sure `ClusterSize` configuration in `ecs-cluster-config.json` is sufficient for rolling upgrade (it is important for Production environment).
+1. Run `bash bin/configure.sh`. It will compress and upload files into the s3 bucket, which will trigger the infra pipeline.
+1. From AWS console find your infra CodePipeline and manually approve in ApproveChangeSet.
