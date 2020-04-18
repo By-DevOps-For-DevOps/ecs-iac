@@ -1,7 +1,7 @@
 AWSTemplateFormatVersion: "2010-09-09"
 
 Description: >
-  AWS CloudFormation Sample Template Continuous Delievery: This template
+  AWS CloudFormation Sample Template Continuous Delivery: This template
   builds an AWS CodePipeline pipeline that implements a continuous delivery release
   process for AWS CloudFormation stacks. Submit a CloudFormation source artifact
   to an Amazon S3 location before building the pipeline. The pipeline uses the
