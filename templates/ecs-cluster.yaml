@@ -143,20 +143,17 @@ Resources:
                             - |
                                 #!/bin/bash
                                 yum update -y
-                                yum install -y aws-cfn-bootstrap python34
+                                yum install -y aws-cfn-bootstrap awscli
                                 /opt/aws/bin/cfn-init -v --region ${AWS::Region} --stack ${AWS::StackName} --resource ECSLaunchConfiguration
                                 /opt/aws/bin/cfn-signal -e $? --region ${AWS::Region} --stack ${AWS::StackName} --resource ECSAutoScalingGroup
                                 echo ECS_AVAILABLE_LOGGING_DRIVERS='["json-file","syslog","gelf","awslogs"]' >> /etc/ecs/ecs.config
-                                curl -O https://bootstrap.pypa.io/get-pip.py
-                                python3 /get-pip.py
-                                /usr/local/bin/pip install awscli
-                                (crontab -l 2>/dev/null; echo "*/5 * * * * /usr/local/bin/aws cloudwatch put-metric-data \
+                                (crontab -l 2>/dev/null; echo "*/5 * * * * /bin/aws cloudwatch put-metric-data \
                                 --metric-name LVMUsage \
                                 --namespace DockerVolume \
                                 --unit Percent --value \$(/sbin/lvs  --rows | grep Data | awk '{print \$2}') \
                                 --dimensions InstanceId=$(curl  http://169.254.169.254/latest/meta-data/instance-id) \
                                 --region ${AWS::Region}") | crontab -
-                                /usr/local/bin/aws cloudwatch put-metric-alarm \
+                                /bin/aws cloudwatch put-metric-alarm \
                                 --alarm-name "Diskspace-$(curl  http://169.254.169.254/latest/meta-data/instance-id)" \
                                 --alarm-description "The Diskspace utilization alarm for instance in ECS Cluster" \
                                 --namespace "DockerVolume" \
@@ -183,20 +180,17 @@ Resources:
                         - !Sub |
                             #!/bin/bash
                             yum update -y
-                            yum install -y aws-cfn-bootstrap python34
+                            yum install -y aws-cfn-bootstrap awscli
                             /opt/aws/bin/cfn-init -v --region ${AWS::Region} --stack ${AWS::StackName} --resource ECSLaunchConfiguration
                             /opt/aws/bin/cfn-signal -e $? --region ${AWS::Region} --stack ${AWS::StackName} --resource ECSAutoScalingGroup
                             echo ECS_AVAILABLE_LOGGING_DRIVERS='["json-file","syslog","gelf","awslogs"]' >> /etc/ecs/ecs.config
-                            curl -O https://bootstrap.pypa.io/get-pip.py
-                            python3 /get-pip.py
-                            /usr/local/bin/pip install awscli
-                            (crontab -l 2>/dev/null; echo "*/5 * * * * /usr/local/bin/aws cloudwatch put-metric-data \
+                            (crontab -l 2>/dev/null; echo "*/5 * * * * /bin/aws cloudwatch put-metric-data \
                             --metric-name LVMUsage \
                             --namespace DockerVolume \
                             --unit Percent --value \$(/sbin/lvs  --rows | grep Data | awk '{print \$2}') \
                             --dimensions InstanceId=$(curl  http://169.254.169.254/latest/meta-data/instance-id) \
                             --region ${AWS::Region}") | crontab -
-                            /usr/local/bin/aws cloudwatch put-metric-alarm \
+                            /bin/aws cloudwatch put-metric-alarm \
                             --alarm-name "Diskspace-$(curl  http://169.254.169.254/latest/meta-data/instance-id)" \
                             --alarm-description "The Diskspace utilization alarm for instance in ECS Cluster" \
                             --namespace "DockerVolume" \
