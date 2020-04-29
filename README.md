@@ -46,3 +46,4 @@ The pipeline uses the artifact to automatically create stacks and change sets.
 1. Make sure `ClusterSize` configuration in `ecs-cluster-config.json` is sufficient for rolling upgrade (it is important for Production environment).
 1. Run `bash bin/configure.sh`. It will compress and upload files into the s3 bucket, which will trigger the infra pipeline.
 1. From AWS console find your infra CodePipeline and manually approve in ApproveChangeSet.
+1. Check Auto Scaling group, adjust manually if needed (TODO: currently doesn't work from CodePipeline).
