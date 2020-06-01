@@ -4,38 +4,42 @@ Description: >
 
 Parameters:
 
-    EnvironmentName:
-        Description: An environment name that will be prefixed to resource names
-        Type: String
+  EnvironmentName:
+    Description: An environment name that will be prefixed to resource names
+    Type: String
 
-    InstanceType:
-        Description: Which instance type should we use to build the ECS cluster?
-        Type: String
-        Default: t2.micro
+  InstanceType:
+    Description: Which instance type should we use to build the ECS cluster?
+    Type: String
+    Default: t2.micro
 
-    InstanceDockerVolume:
-        Description: Addition volume size required for docker storage
-        Type: Number
-        Default: 0
+  InstanceDockerVolume:
+    Description: Addition volume size required for docker storage
+    Type: Number
+    Default: 0
 
-    ClusterSize:
-        Description: How many ECS hosts do you want to initially deploy?
-        Type: Number
-        Default: 2
+  ClusterSize:
+    Description: How many ECS hosts do you want to initially deploy?
+    Type: Number
+    Default: 2
 
-    ClusterMaxSize:
-        Description: Maximum number of instances allowed in Autoscaling group?
-        Type: Number
-        Default: 10
+  ClusterMaxSize:
+    Description: Maximum number of instances allowed in Autoscaling group?
+    Type: Number
+    Default: 10
 
-    KeyName:
-        Type: AWS::EC2::KeyPair::KeyName
-        Description: Name of an existing EC2 KeyPair to enable SSH access to the ECS instances.
+  KeyName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: Name of an existing EC2 KeyPair to enable SSH access to the ECS instances.
 
-    IncludeEFS:
-        Description: Include EFS or not? Must be either true or false.
-        Type: String
-        Default: false
+  IncludeEFS:
+    Description: Include EFS or not? Must be either true or false.
+    Type: String
+    Default: false
+
+  CertificateArn:
+    Description: Your Domain SSL/TLS CertificateArn for your Public Load Balancer
+    Type: String
 
 Conditions:
     IsNeedVolume: !Not [!Equals [!Ref InstanceDockerVolume, 0]]
@@ -43,303 +47,423 @@ Conditions:
 
 Mappings:
 
-    # These are the latest ECS optimized AMIs as of Apr 2020:
-    # https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-agent-versions.html
-    #   AMI:          20200430
-    #   ECS agent:    1.39.0
-    #   Docker:       19.03.6-ce
-    #   ecs-init:     1.39.0-1
-    #
-    # You can find the latest available on this page of our documentation:
-    # http://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html
-    # (note the AMI identifier is region specific)
+  # These are the latest ECS optimized AMIs as of Apr 2020:
+  # https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-agent-versions.html
+  #   AMI:          20200430
+  #   ECS agent:    1.39.0
+  #   Docker:       19.03.6-ce
+  #   ecs-init:     1.39.0-1
+  #
+  # You can find the latest available on this page of our documentation:
+  # http://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html
+  # (note the AMI identifier is region specific)
 
-    AWSRegionToAMI:
-        us-east-2:
-            AMIID: ami-0d9ef3d936a8fa1c6
-        us-east-1:
-            AMIID: ami-0aee8ced190c05726
-        us-west-1:
-            AMIID: ami-0fc0ce1549e302a52
-        us-west-2:
-            AMIID: ami-088bb4cd2f62fc0e1
-        ap-northeast-1:
-            AMIID: ami-03179588b2f59f257
-        ap-northeast-2:
-            AMIID: ami-00ec0bddfbdd6e1c1
-        ap-south-1:
-            AMIID: ami-0b9d66ddb2a9f47d1
-        ap-southeast-1:
-            AMIID: ami-0fd3e3d7875748187
-        ap-southeast-2:
-            AMIID: ami-029bf83e14803c25f
-        ca-central-1:
-            AMIID: ami-0c54fd41f64065620
-        eu-central-1:
-            AMIID: ami-0d2e4df42e13655e0
-        eu-north-1:
-            AMIID: ami-0431cac535d281688
-        eu-west-1:
-            AMIID: ami-0a74b180a0c97ecd1
-        eu-west-2:
-            AMIID: ami-04967dd60612d3b49
-        eu-west-3:
-            AMIID: ami-032a9f3e531acca53
-        sa-east-1:
-            AMIID: ami-0d6ac368fff49ff2d
+  AWSRegionToAMI:
+      us-east-2:
+          AMIID: ami-0d9ef3d936a8fa1c6
+      us-east-1:
+          AMIID: ami-0aee8ced190c05726
+      us-west-1:
+          AMIID: ami-0fc0ce1549e302a52
+      us-west-2:
+          AMIID: ami-088bb4cd2f62fc0e1
+      ap-northeast-1:
+          AMIID: ami-03179588b2f59f257
+      ap-northeast-2:
+          AMIID: ami-00ec0bddfbdd6e1c1
+      ap-south-1:
+          AMIID: ami-0b9d66ddb2a9f47d1
+      ap-southeast-1:
+          AMIID: ami-0fd3e3d7875748187
+      ap-southeast-2:
+          AMIID: ami-029bf83e14803c25f
+      ca-central-1:
+          AMIID: ami-0c54fd41f64065620
+      eu-central-1:
+          AMIID: ami-0d2e4df42e13655e0
+      eu-north-1:
+          AMIID: ami-0431cac535d281688
+      eu-west-1:
+          AMIID: ami-0a74b180a0c97ecd1
+      eu-west-2:
+          AMIID: ami-04967dd60612d3b49
+      eu-west-3:
+          AMIID: ami-032a9f3e531acca53
+      sa-east-1:
+          AMIID: ami-0d6ac368fff49ff2d
 
 Resources:
-    ECSCluster:
-        Type: AWS::ECS::Cluster
-        Properties:
-            ClusterName: !Ref EnvironmentName
+  ECSCluster:
+      Type: AWS::ECS::Cluster
+      Properties:
+          ClusterName: !Ref EnvironmentName
 
-    ECSAutoScalingGroup:
-        Type: AWS::AutoScaling::AutoScalingGroup
-        Properties:
-            VPCZoneIdentifier:
-                - Fn::ImportValue: !Sub "${EnvironmentName}-PrivateSubnet1"
-                - Fn::ImportValue: !Sub "${EnvironmentName}-PrivateSubnet2"
-            LaunchConfigurationName: !Ref ECSLaunchConfiguration
-            MinSize: !Ref ClusterSize
-            MaxSize: !Ref ClusterMaxSize
-            DesiredCapacity: !Ref ClusterSize
-            Tags:
-                - Key: Name
-                  Value: !Sub ${EnvironmentName} ECS host
-                  PropagateAtLaunch: true
-        CreationPolicy:
-            ResourceSignal:
-                Timeout: PT15M
-        UpdatePolicy:
-            AutoScalingRollingUpdate:
-                MinInstancesInService: 1
-                MaxBatchSize: 1
-                PauseTime: PT15M
-                WaitOnResourceSignals: true
-                SuspendProcesses:
-                    - ScheduledActions
+  ECSAutoScalingGroup:
+      Type: AWS::AutoScaling::AutoScalingGroup
+      Properties:
+          VPCZoneIdentifier:
+              - Fn::ImportValue: !Sub "${EnvironmentName}-PrivateSubnet1"
+              - Fn::ImportValue: !Sub "${EnvironmentName}-PrivateSubnet2"
+          LaunchConfigurationName: !Ref ECSLaunchConfiguration
+          MinSize: !Ref ClusterSize
+          MaxSize: !Ref ClusterMaxSize
+          DesiredCapacity: !Ref ClusterSize
+          Tags:
+              - Key: Name
+                Value: !Sub ${EnvironmentName} ECS host
+                PropagateAtLaunch: true
+      CreationPolicy:
+          ResourceSignal:
+              Timeout: PT15M
+      UpdatePolicy:
+          AutoScalingRollingUpdate:
+              MinInstancesInService: 1
+              MaxBatchSize: 1
+              PauseTime: PT15M
+              WaitOnResourceSignals: true
+              SuspendProcesses:
+                  - ScheduledActions
 
-    ECSLaunchConfiguration:
-        Type: AWS::AutoScaling::LaunchConfiguration
-        Properties:
-            ImageId:  !FindInMap [AWSRegionToAMI, !Ref "AWS::Region", AMIID]
-            InstanceType: !Ref InstanceType
-            KeyName: !Ref 'KeyName'
-            BlockDeviceMappings:
-                - !If
-                    - IsNeedVolume
-                    - DeviceName: "/dev/xvdcz"
-                      Ebs:
-                        VolumeSize: !Ref InstanceDockerVolume
-                        VolumeType: 'gp2'
-                    - !Ref AWS::NoValue
-            SecurityGroups:
-                - Fn::ImportValue: !Sub "${EnvironmentName}-ECSHostSecurityGroup"
-            IamInstanceProfile: !Ref ECSInstanceProfile
-            UserData:
-                Fn::Base64:
-                    !If
-                        - IsEFSIncluded
-                        - Fn::Sub:
-                            - |
-                                #!/bin/bash
-                                yum update -y
-                                yum install -y aws-cfn-bootstrap awscli
-                                /opt/aws/bin/cfn-init -v --region ${AWS::Region} --stack ${AWS::StackName} --resource ECSLaunchConfiguration
-                                /opt/aws/bin/cfn-signal -e $? --region ${AWS::Region} --stack ${AWS::StackName} --resource ECSAutoScalingGroup
-                                echo ECS_AVAILABLE_LOGGING_DRIVERS='["json-file","syslog","gelf","awslogs"]' >> /etc/ecs/ecs.config
-                                (crontab -l 2>/dev/null; echo "*/5 * * * * /bin/aws cloudwatch put-metric-data \
-                                --metric-name LVMUsage \
-                                --namespace DockerVolume \
-                                --unit Percent --value \$(/sbin/lvs  --rows | grep Data | awk '{print \$2}') \
-                                --dimensions InstanceId=$(curl  http://169.254.169.254/latest/meta-data/instance-id) \
-                                --region ${AWS::Region}") | crontab -
-                                /bin/aws cloudwatch put-metric-alarm \
-                                --alarm-name "Diskspace-$(curl  http://169.254.169.254/latest/meta-data/instance-id)" \
-                                --alarm-description "The Diskspace utilization alarm for instance in ECS Cluster" \
-                                --namespace "DockerVolume" \
-                                --metric-name LVMUsage --statistic Average \
-                                --period 60 --evaluation-periods 3 --threshold 50 \
-                                --comparison-operator GreaterThanOrEqualToThreshold \
-                                --dimensions Name=InstanceId,Value=$(curl  http://169.254.169.254/latest/meta-data/instance-id) --region ${AWS::Region}
-                                #EFS
-                                yum install -y jq nfs-utils
-                                EC2_AVAIL_ZONE="$(curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone)"
-                                DIR_TGT="/mnt/efs"
-                                mkdir "$DIR_TGT"
-                                DIR_SRC="$EC2_AVAIL_ZONE.${EfsFileSystemId}.efs.${AWS::Region}.amazonaws.com"
-                                mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,soft,timeo=600,retrans=2 "$DIR_SRC:/" "$DIR_TGT"
-                                chown ec2-user:ec2-user $DIR_TGT
-                                cp -p "/etc/fstab" "/etc/fstab.back-$(date +%F)"
-                                echo -e "$DIR_SRC:/ \t\t $DIR_TGT \t\t nfs \t\t nfsvers=4.1,rsize=1048576,wsize=1048576,soft,timeo=600,retrans=2 \t\t 0 \t\t 0" | tee -a /etc/fstab
-                                docker stop ecs-agent
-                                /etc/init.d/docker restart
-                                docker start ecs-agent
-                            - EfsFileSystemId:
-                                Fn::ImportValue:
-                                    !Sub "${EnvironmentName}-FileSystemID"
-                        - !Sub |
-                            #!/bin/bash
-                            yum update -y
-                            yum install -y aws-cfn-bootstrap awscli
-                            /opt/aws/bin/cfn-init -v --region ${AWS::Region} --stack ${AWS::StackName} --resource ECSLaunchConfiguration
-                            /opt/aws/bin/cfn-signal -e $? --region ${AWS::Region} --stack ${AWS::StackName} --resource ECSAutoScalingGroup
-                            echo ECS_AVAILABLE_LOGGING_DRIVERS='["json-file","syslog","gelf","awslogs"]' >> /etc/ecs/ecs.config
-                            (crontab -l 2>/dev/null; echo "*/5 * * * * /bin/aws cloudwatch put-metric-data \
-                            --metric-name LVMUsage \
-                            --namespace DockerVolume \
-                            --unit Percent --value \$(/sbin/lvs  --rows | grep Data | awk '{print \$2}') \
-                            --dimensions InstanceId=$(curl  http://169.254.169.254/latest/meta-data/instance-id) \
-                            --region ${AWS::Region}") | crontab -
-                            /bin/aws cloudwatch put-metric-alarm \
-                            --alarm-name "Diskspace-$(curl  http://169.254.169.254/latest/meta-data/instance-id)" \
-                            --alarm-description "The Diskspace utilization alarm for instance in ECS Cluster" \
-                            --namespace "DockerVolume" \
-                            --metric-name LVMUsage --statistic Average \
-                            --period 60 --evaluation-periods 3 --threshold 50 \
-                            --comparison-operator GreaterThanOrEqualToThreshold \
-                            --dimensions Name=InstanceId,Value=$(curl  http://169.254.169.254/latest/meta-data/instance-id) --region ${AWS::Region}
-        Metadata:
-            AWS::CloudFormation::Init:
-                config:
-                    commands:
-                        01_add_instance_to_cluster:
-                            command: !Sub echo ECS_CLUSTER=${ECSCluster} >> /etc/ecs/ecs.config
-                    files:
-                        "/etc/cfn/cfn-hup.conf":
-                            mode: 000400
-                            owner: root
-                            group: root
-                            content: !Sub |
-                                [main]
-                                stack=${AWS::StackId}
-                                region=${AWS::Region}
+  ECSLaunchConfiguration:
+      Type: AWS::AutoScaling::LaunchConfiguration
+      Properties:
+          ImageId:  !FindInMap [AWSRegionToAMI, !Ref "AWS::Region", AMIID]
+          InstanceType: !Ref InstanceType
+          KeyName: !Ref 'KeyName'
+          BlockDeviceMappings:
+              - !If
+                  - IsNeedVolume
+                  - DeviceName: "/dev/xvdcz"
+                    Ebs:
+                      VolumeSize: !Ref InstanceDockerVolume
+                      VolumeType: 'gp2'
+                  - !Ref AWS::NoValue
+          SecurityGroups:
+              - Fn::ImportValue: !Sub "${EnvironmentName}-ECSHostSecurityGroup"
+          IamInstanceProfile: !Ref ECSInstanceProfile
+          UserData:
+              Fn::Base64:
+                  !If
+                      - IsEFSIncluded
+                      - Fn::Sub:
+                          - |
+                              #!/bin/bash
+                              yum update -y
+                              yum install -y aws-cfn-bootstrap awscli
+                              /opt/aws/bin/cfn-init -v --region ${AWS::Region} --stack ${AWS::StackName} --resource ECSLaunchConfiguration
+                              /opt/aws/bin/cfn-signal -e $? --region ${AWS::Region} --stack ${AWS::StackName} --resource ECSAutoScalingGroup
+                              echo ECS_AVAILABLE_LOGGING_DRIVERS='["json-file","syslog","gelf","awslogs"]' >> /etc/ecs/ecs.config
+                              (crontab -l 2>/dev/null; echo "*/5 * * * * /bin/aws cloudwatch put-metric-data \
+                              --metric-name LVMUsage \
+                              --namespace DockerVolume \
+                              --unit Percent --value \$(/sbin/lvs  --rows | grep Data | awk '{print \$2}') \
+                              --dimensions InstanceId=$(curl  http://169.254.169.254/latest/meta-data/instance-id) \
+                              --region ${AWS::Region}") | crontab -
+                              /bin/aws cloudwatch put-metric-alarm \
+                              --alarm-name "Diskspace-$(curl  http://169.254.169.254/latest/meta-data/instance-id)" \
+                              --alarm-description "The Diskspace utilization alarm for instance in ECS Cluster" \
+                              --namespace "DockerVolume" \
+                              --metric-name LVMUsage --statistic Average \
+                              --period 60 --evaluation-periods 3 --threshold 50 \
+                              --comparison-operator GreaterThanOrEqualToThreshold \
+                              --dimensions Name=InstanceId,Value=$(curl  http://169.254.169.254/latest/meta-data/instance-id) --region ${AWS::Region}
+                              #EFS
+                              yum install -y jq nfs-utils
+                              EC2_AVAIL_ZONE="$(curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone)"
+                              DIR_TGT="/mnt/efs"
+                              mkdir "$DIR_TGT"
+                              DIR_SRC="$EC2_AVAIL_ZONE.${EfsFileSystemId}.efs.${AWS::Region}.amazonaws.com"
+                              mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,soft,timeo=600,retrans=2 "$DIR_SRC:/" "$DIR_TGT"
+                              chown ec2-user:ec2-user $DIR_TGT
+                              cp -p "/etc/fstab" "/etc/fstab.back-$(date +%F)"
+                              echo -e "$DIR_SRC:/ \t\t $DIR_TGT \t\t nfs \t\t nfsvers=4.1,rsize=1048576,wsize=1048576,soft,timeo=600,retrans=2 \t\t 0 \t\t 0" | tee -a /etc/fstab
+                              docker stop ecs-agent
+                              /etc/init.d/docker restart
+                              docker start ecs-agent
+                          - EfsFileSystemId:
+                              Fn::ImportValue:
+                                  !Sub "${EnvironmentName}-FileSystemID"
+                      - !Sub |
+                          #!/bin/bash
+                          yum update -y
+                          yum install -y aws-cfn-bootstrap awscli
+                          /opt/aws/bin/cfn-init -v --region ${AWS::Region} --stack ${AWS::StackName} --resource ECSLaunchConfiguration
+                          /opt/aws/bin/cfn-signal -e $? --region ${AWS::Region} --stack ${AWS::StackName} --resource ECSAutoScalingGroup
+                          echo ECS_AVAILABLE_LOGGING_DRIVERS='["json-file","syslog","gelf","awslogs"]' >> /etc/ecs/ecs.config
+                          (crontab -l 2>/dev/null; echo "*/5 * * * * /bin/aws cloudwatch put-metric-data \
+                          --metric-name LVMUsage \
+                          --namespace DockerVolume \
+                          --unit Percent --value \$(/sbin/lvs  --rows | grep Data | awk '{print \$2}') \
+                          --dimensions InstanceId=$(curl  http://169.254.169.254/latest/meta-data/instance-id) \
+                          --region ${AWS::Region}") | crontab -
+                          /bin/aws cloudwatch put-metric-alarm \
+                          --alarm-name "Diskspace-$(curl  http://169.254.169.254/latest/meta-data/instance-id)" \
+                          --alarm-description "The Diskspace utilization alarm for instance in ECS Cluster" \
+                          --namespace "DockerVolume" \
+                          --metric-name LVMUsage --statistic Average \
+                          --period 60 --evaluation-periods 3 --threshold 50 \
+                          --comparison-operator GreaterThanOrEqualToThreshold \
+                          --dimensions Name=InstanceId,Value=$(curl  http://169.254.169.254/latest/meta-data/instance-id) --region ${AWS::Region}
+      Metadata:
+          AWS::CloudFormation::Init:
+              config:
+                  commands:
+                      01_add_instance_to_cluster:
+                          command: !Sub echo ECS_CLUSTER=${ECSCluster} >> /etc/ecs/ecs.config
+                  files:
+                      "/etc/cfn/cfn-hup.conf":
+                          mode: 000400
+                          owner: root
+                          group: root
+                          content: !Sub |
+                              [main]
+                              stack=${AWS::StackId}
+                              region=${AWS::Region}
 
-                        "/etc/cfn/hooks.d/cfn-auto-reloader.conf":
-                            content: !Sub |
-                                [cfn-auto-reloader-hook]
-                                triggers=post.update
-                                path=Resources.ContainerInstances.Metadata.AWS::CloudFormation::Init
-                                action=/opt/aws/bin/cfn-init -v --region ${AWS::Region} --stack ${AWS::StackName} --resource ECSLaunchConfiguration
+                      "/etc/cfn/hooks.d/cfn-auto-reloader.conf":
+                          content: !Sub |
+                              [cfn-auto-reloader-hook]
+                              triggers=post.update
+                              path=Resources.ContainerInstances.Metadata.AWS::CloudFormation::Init
+                              action=/opt/aws/bin/cfn-init -v --region ${AWS::Region} --stack ${AWS::StackName} --resource ECSLaunchConfiguration
 
-                    services:
-                        sysvinit:
-                            cfn-hup:
-                                enabled: true
-                                ensureRunning: true
-                                files:
-                                    - /etc/cfn/cfn-hup.conf
-                                    - /etc/cfn/hooks.d/cfn-auto-reloader.conf
+                  services:
+                      sysvinit:
+                          cfn-hup:
+                              enabled: true
+                              ensureRunning: true
+                              files:
+                                  - /etc/cfn/cfn-hup.conf
+                                  - /etc/cfn/hooks.d/cfn-auto-reloader.conf
 
-    # This IAM Role is attached to all of the ECS hosts. It is based on the default role
-    # published here:
-    # http://docs.aws.amazon.com/AmazonECS/latest/developerguide/instance_IAM_role.html
-    #
-    # You can add other IAM policy statements here to allow access from your ECS hosts
-    # to other AWS services. Please note that this role will be used by ALL containers
-    # running on the ECS host.
+  # This IAM Role is attached to all of the ECS hosts. It is based on the default role
+  # published here:
+  # http://docs.aws.amazon.com/AmazonECS/latest/developerguide/instance_IAM_role.html
+  #
+  # You can add other IAM policy statements here to allow access from your ECS hosts
+  # to other AWS services. Please note that this role will be used by ALL containers
+  # running on the ECS host.
 
-    ECSRole:
-        Type: AWS::IAM::Role
-        Properties:
-            Path: /
-            RoleName: !Sub ${EnvironmentName}-ECSRole-${AWS::Region}
-            AssumeRolePolicyDocument: |
-                {
-                    "Statement": [{
-                        "Action": "sts:AssumeRole",
-                        "Effect": "Allow",
-                        "Principal": {
-                            "Service": "ec2.amazonaws.com"
-                        }
-                    }]
-                }
-            Policies:
-                - PolicyName: ecs-service
-                  PolicyDocument: |
-                    {
-                        "Statement": [{
-                            "Effect": "Allow",
-                            "Action": [
-                                "ecs:CreateCluster",
-                                "ecs:DeregisterContainerInstance",
-                                "ecs:DiscoverPollEndpoint",
-                                "ecs:Poll",
-                                "ecs:RegisterContainerInstance",
-                                "ecs:StartTelemetrySession",
-                                "ecs:Submit*",
-                                "logs:CreateLogStream",
-                                "logs:PutLogEvents",
-                                "ecr:BatchCheckLayerAvailability",
-                                "ecr:BatchGetImage",
-                                "ecr:GetDownloadUrlForLayer",
-                                "ecr:GetAuthorizationToken",
-                                "cloudwatch:*",
-                                "efs:*"
-                            ],
-                            "Resource": "*"
-                        }]
-                    }
+  ECSRole:
+      Type: AWS::IAM::Role
+      Properties:
+          Path: /
+          RoleName: !Sub ${EnvironmentName}-ECSRole-${AWS::Region}
+          AssumeRolePolicyDocument: |
+              {
+                  "Statement": [{
+                      "Action": "sts:AssumeRole",
+                      "Effect": "Allow",
+                      "Principal": {
+                          "Service": "ec2.amazonaws.com"
+                      }
+                  }]
+              }
+          Policies:
+              - PolicyName: ecs-service
+                PolicyDocument: |
+                  {
+                      "Statement": [{
+                          "Effect": "Allow",
+                          "Action": [
+                              "ecs:CreateCluster",
+                              "ecs:DeregisterContainerInstance",
+                              "ecs:DiscoverPollEndpoint",
+                              "ecs:Poll",
+                              "ecs:RegisterContainerInstance",
+                              "ecs:StartTelemetrySession",
+                              "ecs:Submit*",
+                              "logs:CreateLogStream",
+                              "logs:PutLogEvents",
+                              "ecr:BatchCheckLayerAvailability",
+                              "ecr:BatchGetImage",
+                              "ecr:GetDownloadUrlForLayer",
+                              "ecr:GetAuthorizationToken",
+                              "cloudwatch:*",
+                              "efs:*"
+                          ],
+                          "Resource": "*"
+                      }]
+                  }
 
-    ECSInstanceProfile:
-        Type: AWS::IAM::InstanceProfile
-        Properties:
-            Path: /
-            Roles:
-                - !Ref ECSRole
-    ECSScaleUpPolicy:
-        Type: AWS::AutoScaling::ScalingPolicy
-        Properties:
-            AdjustmentType: ChangeInCapacity
-            AutoScalingGroupName:
-                Ref: ECSAutoScalingGroup
-            Cooldown: '300'
-            ScalingAdjustment: '1'
-    ECSCPUScaleUpAlarm:
-        Type: AWS::CloudWatch::Alarm
-        Properties:
-            EvaluationPeriods: '1'
-            Statistic: Average
-            Threshold: '80'
-            AlarmDescription: Alarm if ECS Cluster CPU reservation goes above 80
-            Period: '300'
-            AlarmActions: [!Ref 'ECSScaleUpPolicy']
-            Namespace: AWS/ECS
-            Dimensions:
-            -   Name: ClusterName
-                Value:
-                    Ref: ECSCluster
-            ComparisonOperator: GreaterThanThreshold
-            MetricName: CPUReservation
-    ECSScaleDownPolicy:
-        Type: AWS::AutoScaling::ScalingPolicy
-        Properties:
-            AdjustmentType: ChangeInCapacity
-            AutoScalingGroupName:
-                Ref: ECSAutoScalingGroup
-            Cooldown: '300'
-            ScalingAdjustment: '-1'
-    ECSCPUScaleDownAlarm:
-        Type: AWS::CloudWatch::Alarm
-        Properties:
-            EvaluationPeriods: '1'
-            Statistic: Average
-            Threshold: '20'
-            AlarmDescription: Alarm if ECS Cluster CPU reservation goes below 20
-            Period: '300'
-            AlarmActions: [!Ref 'ECSScaleDownPolicy']
-            Namespace: AWS/ECS
-            Dimensions:
-            -   Name: ClusterName
-                Value:
-                    Ref: ECSCluster
-            ComparisonOperator: LessThanThreshold
-            MetricName: CPUReservation
+  ECSInstanceProfile:
+      Type: AWS::IAM::InstanceProfile
+      Properties:
+          Path: /
+          Roles:
+              - !Ref ECSRole
+  ECSScaleUpPolicy:
+      Type: AWS::AutoScaling::ScalingPolicy
+      Properties:
+          AdjustmentType: ChangeInCapacity
+          AutoScalingGroupName:
+              Ref: ECSAutoScalingGroup
+          Cooldown: '300'
+          ScalingAdjustment: '1'
+  ECSCPUScaleUpAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+          EvaluationPeriods: '1'
+          Statistic: Average
+          Threshold: '80'
+          AlarmDescription: Alarm if ECS Cluster CPU reservation goes above 80
+          Period: '300'
+          AlarmActions: [!Ref 'ECSScaleUpPolicy']
+          Namespace: AWS/ECS
+          Dimensions:
+          -   Name: ClusterName
+              Value:
+                  Ref: ECSCluster
+          ComparisonOperator: GreaterThanThreshold
+          MetricName: CPUReservation
+  ECSScaleDownPolicy:
+      Type: AWS::AutoScaling::ScalingPolicy
+      Properties:
+          AdjustmentType: ChangeInCapacity
+          AutoScalingGroupName:
+              Ref: ECSAutoScalingGroup
+          Cooldown: '300'
+          ScalingAdjustment: '-1'
+  ECSCPUScaleDownAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+          EvaluationPeriods: '1'
+          Statistic: Average
+          Threshold: '20'
+          AlarmDescription: Alarm if ECS Cluster CPU reservation goes below 20
+          Period: '300'
+          AlarmActions: [!Ref 'ECSScaleDownPolicy']
+          Namespace: AWS/ECS
+          Dimensions:
+          -   Name: ClusterName
+              Value:
+                  Ref: ECSCluster
+          ComparisonOperator: LessThanThreshold
+          MetricName: CPUReservation
+
+  # This is a role which is used by the ECS tasks themselves.
+  ECSTaskExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: [ecs-tasks.amazonaws.com]
+          Action: ['sts:AssumeRole']
+      Path: /
+      Policies:
+        - PolicyName: AmazonECSTaskExecutionRolePolicy
+          PolicyDocument:
+            Statement:
+            - Effect: Allow
+              Action:
+                # Allow the ECS Tasks to download images from ECR
+                - 'ecr:GetAuthorizationToken'
+                - 'ecr:BatchCheckLayerAvailability'
+                - 'ecr:GetDownloadUrlForLayer'
+                - 'ecr:BatchGetImage'
+
+                # Allow the ECS tasks to upload logs to CloudWatch
+                - 'logs:CreateLogStream'
+                - 'logs:PutLogEvents'
+
+                # Allow the ECS tasks to write traces to AWS X-Ray
+                - 'xray:PutTraceSegments'
+                - 'xray:PutTelemetryRecords'
+              Resource: '*'
+
+  # Load balancers for getting traffic to containers.
+  #
+  # - One public load balancer, hosted in public subnets that is accessible
+  #   to the public, and is intended to route traffic to one or more public
+  #   facing services.
+
+  # A public facing load balancer, this is used for accepting traffic from the public
+  # internet and directing it to public facing microservices
+  PublicLoadBalancerSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Access to the public facing load balancer
+      VpcId:
+        Fn::ImportValue: !Sub '${EnvironmentName}-VPC'
+      SecurityGroupIngress:
+          # Allow access to ALB from anywhere on the internet
+          - CidrIp: 0.0.0.0/0
+            IpProtocol: -1
+  PublicLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: !Sub '${EnvironmentName}-PublicLoadBalancer'
+      Scheme: internet-facing
+      LoadBalancerAttributes:
+      - Key: idle_timeout.timeout_seconds
+        Value: '30'
+      Subnets:
+        # The load balancer is placed into the public subnets, so that traffic
+        # from the internet can reach the load balancer directly via the internet gateway
+        - Fn::ImportValue: !Sub '${EnvironmentName}-PublicSubnet1'
+        - Fn::ImportValue: !Sub '${EnvironmentName}-PublicSubnet2'
+        #- !Ref PublicSubnetOne
+        #- !Ref PublicSubnetTwo
+      SecurityGroups: [!Ref 'PublicLoadBalancerSG']
+  # A dummy target group is used to setup the ALB to just drop traffic
+  # initially, before any real service target groups have been added.
+  DummyTargetGroupPublic:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: 6
+      HealthCheckPath: /
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 2
+      Name: !Sub '${EnvironmentName}-drop-1'
+      Port: 80
+      Protocol: HTTP
+      UnhealthyThresholdCount: 2
+      VpcId:
+        Fn::ImportValue: !Sub '${EnvironmentName}-VPC'
+  PublicLoadBalancerListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    DependsOn:
+      - PublicLoadBalancer
+    Properties:
+      Certificates:
+        - CertificateArn: !Ref 'CertificateArn'
+      DefaultActions:
+        - TargetGroupArn: !Ref 'DummyTargetGroupPublic'
+          Type: 'forward'
+      LoadBalancerArn: !Ref 'PublicLoadBalancer'
+      Port: 443
+      Protocol: HTTPS
 Outputs:
-
-    Cluster:
-        Description: A reference to the ECS cluster
-        Value: !Ref ECSCluster
-        Export:
-            Name: !Sub ${EnvironmentName}-ECSCluster
+  ClusterName:
+    Description: A reference to the ECS cluster
+    Value: !Ref 'ECSCluster'
+    Export:
+      Name: !Sub '${EnvironmentName}-ECSCluster'
+  ECSTaskExecutionRoleArn:
+    Description: The ARN of the ECS role
+    Value: !GetAtt 'ECSTaskExecutionRole.Arn'
+    Export:
+      Name: !Sub '${EnvironmentName}-ECSTaskExecutionRoleArn'
+  PublicListener:
+    Description: The ARN of the public load balancer's Listener
+    Value: !Ref 'PublicLoadBalancerListener'
+    Export:
+      Name: !Sub '${EnvironmentName}-PublicListener'
+  PublicLoadBalancerHostedZoneID:
+    Description: Canonical Hosted Zone ID of Public Load Balancer for Route53
+    Value: !GetAtt PublicLoadBalancer.CanonicalHostedZoneID
+    Export:
+      Name: !Sub '${EnvironmentName}-PublicLoadBalancerHostedZoneID'
+  PublicLoadBalancerDNSName:
+    Description: DNS Name of Public Load Balancer for Route53
+    Value: !GetAtt PublicLoadBalancer.DNSName
+    Export:
+      Name: !Sub '${EnvironmentName}-PublicLoadBalancerDNSName'
+  PublicLoadBalancerFullName:
+    Description: Public Load Balancer full name
+    Value: !GetAtt PublicLoadBalancer.LoadBalancerFullName
+    Export:
+      Name: !Sub '${EnvironmentName}-PublicLoadBalancerFullName'

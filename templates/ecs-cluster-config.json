@@ -1,11 +1,12 @@
 {
   "Parameters" : {
-    "EnvironmentName" : "Dev",
-    "InstanceType" : "t2.micro",
+    "EnvironmentName" : "stage",
+    "InstanceType" : "t2.medium",
     "ClusterSize" : "1",
-    "ClusterMaxSize" : "5",
+    "ClusterMaxSize" : "2",
     "InstanceDockerVolume": "0",
-    "KeyName" : "ngp-v301-dev-stag",
-    "IncludeEFS" : "false"
+    "KeyName" : "ngp-v303-stage",
+    "IncludeEFS" : "false",
+    "CertificateArn" : ""
   }
 }
