@@ -5,6 +5,11 @@ pipeline that implements a continuous delivery release process for AWS CloudForm
 Submit a CloudFormation source artifact to an Amazon S3 location before building the pipeline.
 The pipeline uses the artifact to automatically create stacks and change sets.
 
+| ECS Infrastructure                                                                                 | Shared Pipeline                                                                         | API Template                                                               | Web Template                                                               | Queue Template                                                            |
+|----------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------|----------------------------------------------------------------------------|----------------------------------------------------------------------------|---------------------------------------------------------------------------|
+| [3.0.2](https://github.com/microservices-today/ngp-infrastructure-codepipeline/releases/tag/3.0.2) | [2.1.0](https://github.com/microservices-today/ngp-app-codepipeline/releases/tag/2.1.0) | [1.0.1](https://github.com/microservices-today/ecs-api/releases/tag/1.0.1) | [1.0.0](https://github.com/microservices-today/ecs-web/releases/tag/1.0.0) | [1.0.0](https://github.com/microservices-today/ecs-mq/releases/tag/1.0.0) |
+| [3.0.3](https://github.com/microservices-today/ngp-infrastructure-codepipeline/releases/tag/3.0.3) | [3.0.0](https://github.com/microservices-today/ngp-app-codepipeline/releases/tag/3.0.0) | [2.0.0](https://github.com/microservices-today/ecs-api/releases/tag/2.0.0) | [2.0.0](https://github.com/microservices-today/ecs-web/releases/tag/2.0.0) | [2.0.0](https://github.com/microservices-today/ecs-mq/releases/tag/2.0.0) |
+
 ## This will create
 
 - VPC
