@@ -1,14 +1,9 @@
-# ngp-infrastructure-codepipeline
+# ecs-iac
 
-This template  builds an [AWS CodePipeline](https://aws.amazon.com/codepipeline/)
+This template builds an [AWS CodePipeline](https://aws.amazon.com/codepipeline/)
 pipeline that implements a continuous delivery release process for AWS CloudFormation stacks.
 Submit a CloudFormation source artifact to an Amazon S3 location before building the pipeline.
 The pipeline uses the artifact to automatically create stacks and change sets.
-
-| ECS Infrastructure                                                                                 | Shared Pipeline                                                                         | API Template                                                               | Web Template                                                               | Queue Template                                                            |
-|----------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------|----------------------------------------------------------------------------|----------------------------------------------------------------------------|---------------------------------------------------------------------------|
-| [3.0.2](https://github.com/microservices-today/ngp-infrastructure-codepipeline/releases/tag/3.0.2) | [2.1.0](https://github.com/microservices-today/ngp-app-codepipeline/releases/tag/2.1.0) | [1.0.1](https://github.com/microservices-today/ecs-api/releases/tag/1.0.1) | [1.0.0](https://github.com/microservices-today/ecs-web/releases/tag/1.0.0) | [1.0.0](https://github.com/microservices-today/ecs-mq/releases/tag/1.0.0) |
-| [3.0.3](https://github.com/microservices-today/ngp-infrastructure-codepipeline/releases/tag/3.0.3) | [3.0.0](https://github.com/microservices-today/ngp-app-codepipeline/releases/tag/3.0.0) | [2.0.0](https://github.com/microservices-today/ecs-api/releases/tag/2.0.0) | [2.0.0](https://github.com/microservices-today/ecs-web/releases/tag/2.0.0) | [2.0.0](https://github.com/microservices-today/ecs-mq/releases/tag/2.0.0) |
 
 ## This will create
 
@@ -28,7 +23,7 @@ The pipeline uses the artifact to automatically create stacks and change sets.
    `git clone https://github.com/microservices-today/ngp-infrastructure-codepipeline.git`
    `cd ngp-infrastructure-codepipeline`
 1. Modify variables in `templates/ecs-cluster-config.json` and `templates/network-config.json`
-   Add your pem file name to `ecs-cluster-config.json` for accessing ECS instances. (e.g. `"KeyName" : "ngp-v303-stage"` if `ngp-v303-stage.pem` file)
+   Add your pem file name to `ecs-cluster-config.json` for accessing ECS instances (e.g. `"KeyName" : "ngp-v303-stage"` if `ngp-v303-stage.pem` file)
 1. Export AWS credentials (`AWS_DEFAULT_REGION` as deployment region)
     ```bash
     export AWS_ACCESS_KEY_ID="accesskey"
@@ -43,7 +38,7 @@ The pipeline uses the artifact to automatically create stacks and change sets.
 1. Open the Link in Browser and for `Stack name` you may keep consistent (e.g. `ngp-v303-stage`)
 1. TagName should be short, to avoid issue with AWS ALB naming limit w/ 32 characters. e.g. `v303`.
 1. Confirm SNS subscription
-    - Confirmation e-maill will be arrived in your e-mail box.
+    - Confirmation e-mail will be arrived in your e-mail box.
 1. Go to CodePipeline Console, and approve Changesets.
 
 ## Steps to upgrade
