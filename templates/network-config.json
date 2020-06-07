@@ -1,6 +1,6 @@
 {
   "Parameters" : {
-    "EnvironmentName" : "Dev",
+    "EnvironmentName" : "stage",
     "VpcCIDR" : "10.192.0.0/16",
     "PublicSubnet1CIDR" : "10.192.10.0/24",
     "PublicSubnet2CIDR" : "10.192.11.0/24",

@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
@@ -30,4 +31,17 @@ then
 elif which gnome-open > /dev/null
 then
   gnome-open $URL
+fi
+
+# Enable Container Insights
+echo -e "\nWould you like to enable Container Insights for your AWS account (yes/no)? \c"
+read answer
+if [ "$answer" = yes ]
+then
+  aws ecs put-account-setting --name "containerInsights" --value "enabled"
+  echo -e "Container Insights is enabled for your AWS Account;"
+  echo -e "It will be enabled for your new ECS cluster going forward."
+else
+  echo -e "You can enable it later for your cluster by running the following cli:\n"
+  echo -e "${GREEN}aws ecs update-cluster-setting --cluster-name myCICluster --settings \"name=containerInsights,value=enabled\"${NC}"
 fi
