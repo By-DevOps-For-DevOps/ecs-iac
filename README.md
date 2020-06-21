@@ -11,19 +11,25 @@ The pipeline uses the artifact to automatically create stacks and change sets.
 - Two private Subnet with two NAT Gateways
 - Two public Subnet with Internet Gateway
 - ECS Cluster
-- Security groups for ECS cluster and Application Load Balancer
+- Security groups for ECS cluster
+- Public Application Load Balancer
 
 ## Steps to setup
 
 1. Go the AWS region where we need to deploy the infrastructure
 1. Create your artifact S3 bucket
+    - For consistency name it as `ngp-v304-stage` for Dev and Staging env or `ngp-v304-prod` for Prod env.
     - Enable Versioning on artifact bucket
-    - Choose region same as your cloudfromation stack. E.g. `ngp-v303-stage` for Development and Staging environment or `ngp-v303-prod` for Production environment.
+    - Choose region same as your cloudfromation stack. 
 1. Clone the repo:
-   `git clone https://github.com/microservices-today/ngp-infrastructure-codepipeline.git`
-   `cd ngp-infrastructure-codepipeline`
-1. Modify variables in `templates/ecs-cluster-config.json` and `templates/network-config.json`
-   Add your pem file name to `ecs-cluster-config.json` for accessing ECS instances (e.g. `"KeyName" : "ngp-v303-stage"` if `ngp-v303-stage.pem` file)
+   ```bash
+   git clone https://github.com/microservices-today/ecs-iac.git
+   cd ecs-iac
+   ```
+1. Modify variables in `templates/ecs-cluster-config.json`
+-
+   Add your pem file name as `KeyName`. E.g. `"KeyName" : "ngp-v303-stage"` if `ngp-v303-stage.pem` file.
+1. Modify variables in `templates/network-config.json`
 1. Export AWS credentials (`AWS_DEFAULT_REGION` as deployment region)
     ```bash
     export AWS_ACCESS_KEY_ID="accesskey"
