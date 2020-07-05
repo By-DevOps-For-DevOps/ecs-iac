@@ -27,8 +27,8 @@ The pipeline uses the artifact to automatically create stacks and change sets.
    cd ecs-iac
    ```
 1. Modify variables in `templates/ecs-cluster-config.json`
--
-   Add your pem file name as `KeyName`. E.g. `"KeyName" : "ngp-v303-stage"` if `ngp-v303-stage.pem` file.
+- Add your pem file name as `KeyName`. E.g. `"KeyName" : "ngp-v303-stage"` if `ngp-v303-stage.pem` file.
+- Add your domain certificate ARN as `CertificateArn`
 1. Modify variables in `templates/network-config.json`
 1. Export AWS credentials (`AWS_DEFAULT_REGION` as deployment region)
     ```bash
