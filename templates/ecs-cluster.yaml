@@ -96,6 +96,9 @@ Resources:
   ECSCluster:
       Type: AWS::ECS::Cluster
       Properties:
+          ClusterSettings:
+            - Name: containerInsights
+              Value: enabled
           ClusterName: !Ref EnvironmentName
 
   ECSAutoScalingGroup:
@@ -467,3 +470,4 @@ Outputs:
     Value: !GetAtt PublicLoadBalancer.LoadBalancerFullName
     Export:
       Name: !Sub '${EnvironmentName}-PublicLoadBalancerFullName'
+
