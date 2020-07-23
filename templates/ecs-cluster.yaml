@@ -100,6 +100,9 @@ Resources:
             - Name: containerInsights
               Value: enabled
           ClusterName: !Ref EnvironmentName
+          Tags:
+            - Key: CloudFormation
+              Value: true
 
   ECSAutoScalingGroup:
       Type: AWS::AutoScaling::AutoScalingGroup
@@ -115,6 +118,10 @@ Resources:
               - Key: Name
                 Value: !Sub ${EnvironmentName} ECS host
                 PropagateAtLaunch: true
+              - Key: CloudFormation
+                Value: true
+                PropagateAtLaunch: true
+
       CreationPolicy:
           ResourceSignal:
               Timeout: PT15M
@@ -288,6 +295,9 @@ Resources:
                           "Resource": "*"
                       }]
                   }
+          Tags:
+            - Key: CloudFormation
+              Value: true
 
   ECSInstanceProfile:
       Type: AWS::IAM::InstanceProfile
@@ -295,6 +305,7 @@ Resources:
           Path: /
           Roles:
               - !Ref ECSRole
+
   ECSScaleUpPolicy:
       Type: AWS::AutoScaling::ScalingPolicy
       Properties:
@@ -303,6 +314,7 @@ Resources:
               Ref: ECSAutoScalingGroup
           Cooldown: '300'
           ScalingAdjustment: '1'
+
   ECSCPUScaleUpAlarm:
       Type: AWS::CloudWatch::Alarm
       Properties:
@@ -319,6 +331,7 @@ Resources:
                   Ref: ECSCluster
           ComparisonOperator: GreaterThanThreshold
           MetricName: CPUReservation
+
   ECSScaleDownPolicy:
       Type: AWS::AutoScaling::ScalingPolicy
       Properties:
@@ -327,6 +340,7 @@ Resources:
               Ref: ECSAutoScalingGroup
           Cooldown: '300'
           ScalingAdjustment: '-1'
+
   ECSCPUScaleDownAlarm:
       Type: AWS::CloudWatch::Alarm
       Properties:
@@ -344,7 +358,7 @@ Resources:
           ComparisonOperator: LessThanThreshold
           MetricName: CPUReservation
 
-  # This is a role which is used by the ECS tasks themselves.
+  # This is a role used by the ECS tasks themselves.
   ECSTaskExecutionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -375,6 +389,9 @@ Resources:
                 - 'xray:PutTraceSegments'
                 - 'xray:PutTelemetryRecords'
               Resource: '*'
+      Tags:
+        - Key: CloudFormation
+          Value: true
 
   # Load balancers for getting traffic to containers.
   #
@@ -394,6 +411,10 @@ Resources:
           # Allow access to ALB from anywhere on the internet
           - CidrIp: 0.0.0.0/0
             IpProtocol: -1
+      Tags:
+        - Key: CloudFormation
+          Value: true
+
   PublicLoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
@@ -410,6 +431,10 @@ Resources:
         #- !Ref PublicSubnetOne
         #- !Ref PublicSubnetTwo
       SecurityGroups: [!Ref 'PublicLoadBalancerSG']
+      Tags:
+        - Key: CloudFormation
+          Value: true
+
   # A dummy target group is used to setup the ALB to just drop traffic
   # initially, before any real service target groups have been added.
   DummyTargetGroupPublic:
@@ -426,6 +451,10 @@ Resources:
       UnhealthyThresholdCount: 2
       VpcId:
         Fn::ImportValue: !Sub '${EnvironmentName}-VPC'
+      Tags:
+        - Key: CloudFormation
+          Value: true
+
   PublicLoadBalancerListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
     DependsOn:
@@ -470,4 +499,3 @@ Outputs:
     Value: !GetAtt PublicLoadBalancer.LoadBalancerFullName
     Export:
       Name: !Sub '${EnvironmentName}-PublicLoadBalancerFullName'
-

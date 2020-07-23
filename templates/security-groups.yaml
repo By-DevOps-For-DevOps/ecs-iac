@@ -31,6 +31,9 @@ Resources:
             Tags:
                 - Key: Name
                   Value: !Sub ${EnvironmentName}-ECS-Hosts
+                - Key: CloudFormation
+                  Value: true
+
 Outputs:
 
     ECSHostSecurityGroup:

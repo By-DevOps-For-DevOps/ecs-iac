@@ -14,13 +14,13 @@ The pipeline uses the artifact to automatically create stacks and change sets.
 - Security groups for ECS cluster
 - Public Application Load Balancer
 
-## Steps to setup
+## Steps to set up
 
 1. Go the AWS region where we need to deploy the infrastructure
 1. Create your artifact S3 bucket
     - For consistency name it as `ngp-v304-stage` for Dev and Staging env or `ngp-v304-prod` for Prod env.
     - Enable Versioning on artifact bucket
-    - Choose region same as your cloudfromation stack. 
+    - Choose region same as your CloudFormation stack.
 1. Clone the repo:
    ```bash
    git clone https://github.com/microservices-today/ecs-iac.git
@@ -42,7 +42,7 @@ The pipeline uses the artifact to automatically create stacks and change sets.
    - Upload the `.zip` file to S3 bucket.
    - Launch `infrastructure-pipeline.yaml` stack.
 1. Open the Link in Browser and for `Stack name` you may keep consistent (e.g. `ngp-v303-stage`)
-1. TagName should be short, to avoid issue with AWS ALB naming limit w/ 32 characters. e.g. `v303`.
+1. TagName should be short to avoid issue with AWS ALB naming limit w/ 32 characters. e.g. `v304`.
 1. Confirm SNS subscription
     - Confirmation e-mail will be arrived in your e-mail box.
 1. Go to CodePipeline Console, and approve Changesets.
