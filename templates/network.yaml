@@ -264,3 +264,16 @@ Outputs:
         Value: !Ref PrivateSubnet2
         Export:
             Name: !Sub ${EnvironmentName}-PrivateSubnet2
+
+    PrivateSubnet1CIDR:
+        Description: CidrBLock of private subnet
+        Value: !Ref PrivateSubnet1CIDR
+        Export:
+            Name: !Sub ${EnvironmentName}-PrivateSubnet1CIDR
+
+    PrivateSubnet2CIDR:
+        Description: CidrBLock of private subnet
+        Value: !Ref PrivateSubnet2CIDR
+        Export:
+            Name: !Sub ${EnvironmentName}-PrivateSubnet2CIDR
+
