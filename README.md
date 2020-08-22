@@ -5,6 +5,9 @@ pipeline that implements a continuous delivery release process for AWS CloudForm
 Submit a CloudFormation source artifact to an Amazon S3 location before building the pipeline.
 The pipeline uses the artifact to automatically create stacks and change sets.
 
+## Architecture
+![Architecture Diagram](docs/architecture.drawio.svg)
+
 ## This will create
 
 - VPC
