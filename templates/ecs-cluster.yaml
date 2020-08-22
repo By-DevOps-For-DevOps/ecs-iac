@@ -408,9 +408,11 @@ Resources:
       VpcId:
         Fn::ImportValue: !Sub '${EnvironmentName}-VPC'
       SecurityGroupIngress:
-          # Allow access to ALB from anywhere on the internet
-          - CidrIp: 0.0.0.0/0
-            IpProtocol: -1
+          # Only allow access to ALB's 443 port from anywhere on the internet
+          - IpProtocol: tcp
+            FromPort: '443'
+            ToPort: '443'
+            CidrIp: 0.0.0.0/0
       Tags:
         - Key: CloudFormation
           Value: true
