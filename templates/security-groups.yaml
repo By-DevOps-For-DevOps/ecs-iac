@@ -11,26 +11,58 @@ Parameters:
 
 Resources:
 
-    # This security group defines who/where is allowed to access the ECS hosts directly.
-    # By default we're just allowing access from the load balancer.  If you want to SSH
+    # This security group defines who/where is allowed to access the ECS hosts(EC2 or Fargate) directly.
+    # By default we're just allowing access from the load balancer. If you want to SSH
     # into the hosts, or expose non-load balanced services you can open their ports here.
     ECSHostSecurityGroup:
-        Type: AWS::EC2::SecurityGroup
-        Properties:
-            VpcId:
-              Fn::ImportValue:
-               !Sub "${EnvironmentName}-VPC"
-            GroupDescription: Access to the ECS hosts and the tasks/containers that run on them
-            SecurityGroupIngress:
-                # Only allow inbound access to ECS from the same VPC
-                - IpProtocol: -1
-                  FromPort: '0'
-                  ToPort: '0'
-                  CidrIp:
-                      Fn::ImportValue: !Sub "${EnvironmentName}-VpcCIDR"
-            Tags:
-                - Key: Name
-                  Value: !Sub ${EnvironmentName}-ECS-Hosts
+      Type: AWS::EC2::SecurityGroup
+      Properties:
+        # TODO: Should be enabled for the next release
+        # GroupName: !Sub "${EnvironmentName}-ECS-Hosts"
+        GroupDescription: Access to the ECS hosts and the tasks/containers that run on them
+        VpcId:
+          Fn::ImportValue: !Sub "${EnvironmentName}-VPC"
+        SecurityGroupIngress:
+          # Only allow inbound access to ECS from the same VPC
+          - IpProtocol: -1
+            CidrIp:
+              Fn::ImportValue: !Sub "${EnvironmentName}-VpcCIDR"
+        Tags:
+          - Key: Name
+            Value: !Sub ${EnvironmentName}-ECS-Hosts
+          - Key: CloudFormation
+            Value: true
+
+    # This is a generic security group which allows only traffic from private subnets
+    # Example usage is when you need to secure AWS PrivateLink connection
+    # (https://docs.atlas.mongodb.com/security-private-endpoint/#make-sure-that-your-security-groups-are-configured-properly) By default we're just allowing access from the load balancer. If you want to SSH
+    PrivateSubnetSecurityGroup:
+      Type: AWS::EC2::SecurityGroup
+      Properties:
+        GroupName: !Sub ${EnvironmentName}-Private-Subnets
+        GroupDescription: Restrict inbound and outbound traffics only to private subnets. E.g. to secure interface endpoints.
+        VpcId:
+          Fn::ImportValue: !Sub "${EnvironmentName}-VPC"
+        SecurityGroupIngress:
+          - IpProtocol: -1
+            CidrIp:
+              Fn::ImportValue: !Sub "${EnvironmentName}-PrivateSubnet1CIDR"
+          - IpProtocol: -1
+            CidrIp:
+              Fn::ImportValue: !Sub "${EnvironmentName}-PrivateSubnet2CIDR"
+        SecurityGroupEgress:
+          - IpProtocol: -1
+            CidrIp:
+              Fn::ImportValue: !Sub "${EnvironmentName}-PrivateSubnet1CIDR"
+          - IpProtocol: -1
+            CidrIp:
+              Fn::ImportValue: !Sub "${EnvironmentName}-PrivateSubnet2CIDR"
+        Tags:
+          - Key: Name
+            Value: !Sub ${EnvironmentName}-Private-Subnets
+          - Key: CloudFormation
+            Value: true
+
 Outputs:
 
     ECSHostSecurityGroup:

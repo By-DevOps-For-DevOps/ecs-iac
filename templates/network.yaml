@@ -1,7 +1,7 @@
 Description: >
     This template deploys a VPC, with a pair of public and private subnets spread
-    across two Availabilty Zones. It deploys an Internet Gateway, with a default
-    route on the public subnets. It deploys a pair of NAT Gateways (one in each AZ),
+    across two Availability Zones. Also, it provisions an Internet Gateway with a default
+    route on the public subnets, a pair of NAT Gateways (one in each AZ),
     and default routes for them in the private subnets.
 
 Parameters:
@@ -46,6 +46,8 @@ Resources:
             Tags:
                 - Key: Name
                   Value: !Ref EnvironmentName
+                - Key: CloudFormation
+                  Value: true
 
     InternetGateway:
         Type: AWS::EC2::InternetGateway
@@ -53,6 +55,8 @@ Resources:
             Tags:
                 - Key: Name
                   Value: !Ref EnvironmentName
+                - Key: CloudFormation
+                  Value: true
 
     InternetGatewayAttachment:
         Type: AWS::EC2::VPCGatewayAttachment
@@ -70,6 +74,8 @@ Resources:
             Tags:
                 - Key: Name
                   Value: !Sub ${EnvironmentName} Public Subnet (AZ1)
+                - Key: CloudFormation
+                  Value: true
 
     PublicSubnet2:
         Type: AWS::EC2::Subnet
@@ -81,6 +87,8 @@ Resources:
             Tags:
                 - Key: Name
                   Value: !Sub ${EnvironmentName} Public Subnet (AZ2)
+                - Key: CloudFormation
+                  Value: true
 
     PrivateSubnet1:
         Type: AWS::EC2::Subnet
@@ -92,6 +100,8 @@ Resources:
             Tags:
                 - Key: Name
                   Value: !Sub ${EnvironmentName} Private Subnet (AZ1)
+                - Key: CloudFormation
+                  Value: true
 
     PrivateSubnet2:
         Type: AWS::EC2::Subnet
@@ -103,30 +113,44 @@ Resources:
             Tags:
                 - Key: Name
                   Value: !Sub ${EnvironmentName} Private Subnet (AZ2)
+                - Key: CloudFormation
+                  Value: true
 
     NatGateway1EIP:
         Type: AWS::EC2::EIP
         DependsOn: InternetGatewayAttachment
         Properties:
             Domain: vpc
+            Tags:
+                - Key: CloudFormation
+                  Value: true
 
     NatGateway2EIP:
         Type: AWS::EC2::EIP
         DependsOn: InternetGatewayAttachment
         Properties:
             Domain: vpc
+            Tags:
+                - Key: CloudFormation
+                  Value: true
 
     NatGateway1:
         Type: AWS::EC2::NatGateway
         Properties:
             AllocationId: !GetAtt NatGateway1EIP.AllocationId
             SubnetId: !Ref PublicSubnet1
+            Tags:
+                - Key: CloudFormation
+                  Value: true
 
     NatGateway2:
         Type: AWS::EC2::NatGateway
         Properties:
             AllocationId: !GetAtt NatGateway2EIP.AllocationId
             SubnetId: !Ref PublicSubnet2
+            Tags:
+                - Key: CloudFormation
+                  Value: true
 
     PublicRouteTable:
         Type: AWS::EC2::RouteTable
@@ -135,6 +159,8 @@ Resources:
             Tags:
                 - Key: Name
                   Value: !Sub ${EnvironmentName} Public Routes
+                - Key: CloudFormation
+                  Value: true
 
     DefaultPublicRoute:
         Type: AWS::EC2::Route
@@ -155,7 +181,6 @@ Resources:
             RouteTableId: !Ref PublicRouteTable
             SubnetId: !Ref PublicSubnet2
 
-
     PrivateRouteTable1:
         Type: AWS::EC2::RouteTable
         Properties:
@@ -163,6 +188,8 @@ Resources:
             Tags:
                 - Key: Name
                   Value: !Sub ${EnvironmentName} Private Routes (AZ1)
+                - Key: CloudFormation
+                  Value: true
 
     DefaultPrivateRoute1:
         Type: AWS::EC2::Route
@@ -184,6 +211,8 @@ Resources:
             Tags:
                 - Key: Name
                   Value: !Sub ${EnvironmentName} Private Routes (AZ2)
+                - Key: CloudFormation
+                  Value: true
 
     DefaultPrivateRoute2:
         Type: AWS::EC2::Route
@@ -235,3 +264,16 @@ Outputs:
         Value: !Ref PrivateSubnet2
         Export:
             Name: !Sub ${EnvironmentName}-PrivateSubnet2
+
+    PrivateSubnet1CIDR:
+        Description: CidrBLock of private subnet
+        Value: !Ref PrivateSubnet1CIDR
+        Export:
+            Name: !Sub ${EnvironmentName}-PrivateSubnet1CIDR
+
+    PrivateSubnet2CIDR:
+        Description: CidrBLock of private subnet
+        Value: !Ref PrivateSubnet2CIDR
+        Export:
+            Name: !Sub ${EnvironmentName}-PrivateSubnet2CIDR
+

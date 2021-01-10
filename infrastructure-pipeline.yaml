@@ -11,11 +11,13 @@ Description: >
 
 Parameters:
   PipelineName:
+    Default: S3_BUCKET_NAME
     Description: A name for pipeline
     Type: String
   TagName:
+    Default: TAG_NAME
     Type: String
-    Description: Tag name to identify the AWS resources and exporting variables for other stacks
+    Description: TagName should be short to avoid issue with AWS ALB naming limit w/ 32 characters. e.g. `v304`.
   S3Bucket:
     Default: S3_BUCKET_NAME
     Description: The name of the S3 bucket that contains the source artifact, which must be in the same region as this stack
