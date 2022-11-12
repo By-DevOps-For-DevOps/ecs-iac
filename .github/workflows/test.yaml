@@ -17,10 +17,10 @@ jobs:
         run: |
           shopt -s globstar # enable globbing for linting multiple files
           cfn-lint --version
-          cfn-lint -t templates/*.yaml
+          cfn-lint **/*.yaml
 
       - name: Print cfn_nag_scan linter
         uses: stelligent/cfn_nag@master
         with:
-          input_path: templates
+          input_path: templates/*.yaml
           extra_args: '' # extra_args: --fail-on-warnings -o json
