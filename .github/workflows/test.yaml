@@ -22,5 +22,6 @@ jobs:
       - name: Print cfn_nag_scan linter
         uses: stelligent/cfn_nag@master
         with:
-          input_path: templates/*.yaml
+          input_path: .
+          template-pattern: yaml
           extra_args: '' # extra_args: --fail-on-warnings -o json
