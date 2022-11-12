@@ -185,8 +185,6 @@ Resources:
 
   PublicLoadBalancerListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
-    DependsOn:
-      - PublicLoadBalancer
     Properties:
       Certificates:
         - CertificateArn: !Ref 'CertificateArn'
