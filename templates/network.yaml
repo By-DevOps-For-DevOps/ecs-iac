@@ -122,6 +122,8 @@ Resources:
         Properties:
             Domain: vpc
             Tags:
+                - Key: Name
+                  Value: !Sub ${EnvironmentName} (EIP1)
                 - Key: CloudFormation
                   Value: true
 
@@ -131,8 +133,11 @@ Resources:
         Properties:
             Domain: vpc
             Tags:
+                - Key: Name
+                  Value: !Sub ${EnvironmentName} (EIP2)
                 - Key: CloudFormation
                   Value: true
+
 
     NatGateway1:
         Type: AWS::EC2::NatGateway
@@ -140,6 +145,8 @@ Resources:
             AllocationId: !GetAtt NatGateway1EIP.AllocationId
             SubnetId: !Ref PublicSubnet1
             Tags:
+                - Key: Name
+                  Value: !Sub ${EnvironmentName} (NAT1)
                 - Key: CloudFormation
                   Value: true
 
@@ -149,6 +156,8 @@ Resources:
             AllocationId: !GetAtt NatGateway2EIP.AllocationId
             SubnetId: !Ref PublicSubnet2
             Tags:
+                - Key: Name
+                  Value: !Sub ${EnvironmentName} (NAT2)
                 - Key: CloudFormation
                   Value: true
 
