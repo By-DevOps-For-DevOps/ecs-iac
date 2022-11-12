@@ -23,5 +23,4 @@ jobs:
         uses: stelligent/cfn_nag@master
         with:
           input_path: .
-          template-pattern: yaml
-          extra_args: '' # extra_args: --fail-on-warnings -o json
+          extra_args: '--template-pattern yaml' # extra_args: --fail-on-warnings -o json
