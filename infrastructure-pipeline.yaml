@@ -53,6 +53,9 @@ Resources:
       VersioningConfiguration:
         Status: Enabled
 
+  #-----------------------------------------------------------------------------#
+  # SNS
+  #-----------------------------------------------------------------------------#
   CodePipelineSNSTopic:
     Type: AWS::SNS::Topic
     Properties:
@@ -516,6 +519,10 @@ Resources:
                   StackName: !Join ["-", ["Ref":"AWS::StackName", "ProdEnvironment-VPC"]]
                 RunOrder: '5'
           - !Ref AWS::NoValue
+
+  #-----------------------------------------------------------------------------#
+  # Role for CodePipeline service
+  #-----------------------------------------------------------------------------#
 
   CFNRole:
     Type: AWS::IAM::Role

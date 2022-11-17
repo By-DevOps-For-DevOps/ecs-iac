@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+set -euo pipefail
+
+[[ -z "${DEBUG:-}" ]] || set -x
+
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
@@ -22,7 +26,7 @@ cp ../infrastructure-pipeline.yaml .
 sed -i -e "s@S3_BUCKET_NAME@${S3_BUCKET_NAME}@g" infrastructure-pipeline.yaml
 TAG_NAME=$(echo "${S3_BUCKET_NAME}" | cut -d'-' -f2)
 sed -i -e "s@TAG_NAME@${TAG_NAME}@g" infrastructure-pipeline.yaml
-aws s3 cp infrastructure-pipeline.yaml s3://${S3_BUCKET_NAME}/
+aws s3 cp infrastructure-pipeline.yaml s3://"${S3_BUCKET_NAME}"/
 rm infrastructure-pipeline.yaml
 
 URL="https://console.aws.amazon.com/cloudformation/home?region=${AWS_REGION}#/stacks/new?templateURL=https://s3.amazonaws.com/${S3_BUCKET_NAME}/infrastructure-pipeline.yaml"
