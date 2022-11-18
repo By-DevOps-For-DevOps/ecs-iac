@@ -6,8 +6,8 @@ Description: >
   process for AWS CloudFormation stacks. Submit a CloudFormation source artifact
   to an Amazon S3 location before building the pipeline. The pipeline uses the
   artifact to automatically create stacks and change sets.
-  **WARNING** This template creates Amazon EC2 instances. You will be billed
-  for the AWS resources used when you create a stack using this template.
+  **WARNING** You will be billed for the AWS resources (e.g., NAT gateways, ALB, etc.)
+  used when you create a stack using this template.
 
 Parameters:
   PipelineName:
@@ -17,7 +17,7 @@ Parameters:
   TagName:
     Default: TAG_NAME
     Type: String
-    Description: TagName should be short to avoid issue with AWS ALB naming limit w/ 32 characters. e.g. `v304`.
+    Description: TagName should be short to avoid issue with AWS ALB naming limit w/ 32 characters. e.g. `v305`.
   S3Bucket:
     Default: S3_BUCKET_NAME
     Description: The name of the S3 bucket that contains the source artifact, which must be in the same region as this stack
@@ -32,28 +32,19 @@ Parameters:
   Environment:
     Type: String
     Description: Specify the environment
-    Default: dev-and-staging
+    Default: stage
     AllowedValues:
       - production
       - dev-and-staging
       - dev
       - stage
     ConstraintDescription: Must specify production, staging, hotfix, development or feature.
-  IncludeEFS:
-    Type: String
-    Description: Include EFS or not
-    Default: false
-    AllowedValues:
-      - true
-      - false
-    ConstraintDescription: Must be either true or false.
 
 Conditions:
   IsProduction: !Equals [ !Ref Environment, production ]
   IsDevOrDevStage: !Or [ !Equals [ !Ref Environment, dev ], !Equals [ !Ref Environment, dev-and-staging ]]
   IsStageOrDevStage: !Or [ !Equals [ !Ref Environment, stage ], !Equals [ !Ref Environment, dev-and-staging ]]
   IsDevOrStaging: !Or [ !Equals [ !Ref Environment, stage ], !Equals [ !Ref Environment, stage ], !Equals [ !Ref Environment, dev-and-staging ]]
-  IsEFSIncluded: !Equals [ !Ref IncludeEFS, true ]
 
 Resources:
   ArtifactStoreBucket:
@@ -62,12 +53,15 @@ Resources:
       VersioningConfiguration:
         Status: Enabled
 
+  #-----------------------------------------------------------------------------#
+  # SNS
+  #-----------------------------------------------------------------------------#
   CodePipelineSNSTopic:
     Type: AWS::SNS::Topic
     Properties:
       Subscription:
         - Endpoint: !Ref Email
-          Protocol: email
+          Protocol: "email"
 
   Pipeline:
     Type: AWS::CodePipeline::Pipeline
@@ -134,29 +128,6 @@ Resources:
                       "EnvironmentName": "${TagName}-Dev"
                     }
                 RunOrder: '2'
-              - !If
-                - IsEFSIncluded
-                - Name: Create-DevEFS
-                  ActionTypeId:
-                    Category: Deploy
-                    Owner: AWS
-                    Provider: CloudFormation
-                    Version: '1'
-                  InputArtifacts:
-                    - Name: TemplateSource
-                  Configuration:
-                    ActionMode: REPLACE_ON_FAILURE
-                    Capabilities: CAPABILITY_NAMED_IAM
-                    RoleArn: !GetAtt [CFNRole, Arn]
-                    StackName: !Join ["-", ["Ref":"AWS::StackName", "DevEnvironment-EFS"]]
-                    TemplatePath: TemplateSource::efs.yaml
-                    TemplateConfiguration: TemplateSource::efs-config.json
-                    ParameterOverrides: !Sub |
-                      {
-                        "EnvironmentName": "${TagName}-Dev"
-                      }
-                  RunOrder: '3'
-                - !Ref AWS::NoValue
               - Name: Create-DevEcs
                 ActionTypeId:
                   Category: Deploy
@@ -221,30 +192,6 @@ Resources:
                       "EnvironmentName": "${TagName}-Staging"
                     }
                 RunOrder: '1'
-              - !If
-                - IsEFSIncluded
-                - Name: Create-EFS-ChangeSet
-                  ActionTypeId:
-                    Category: Deploy
-                    Owner: AWS
-                    Provider: CloudFormation
-                    Version: '1'
-                  InputArtifacts:
-                    - Name: TemplateSource
-                  Configuration:
-                    ActionMode: CHANGE_SET_REPLACE
-                    Capabilities: CAPABILITY_NAMED_IAM
-                    RoleArn: !GetAtt [CFNRole, Arn]
-                    StackName: !Join ["-", ["Ref":"AWS::StackName", "StagingEnvironment-EFS"]]
-                    ChangeSetName: ChangesToStagingEFS
-                    TemplatePath: TemplateSource::efs.yaml
-                    TemplateConfiguration: TemplateSource::efs-config.json
-                    ParameterOverrides: !Sub |
-                      {
-                        "EnvironmentName": "${TagName}-Staging"
-                      }
-                  RunOrder: '1'
-                - !Ref AWS::NoValue
               - Name: Create-ECS-ChangeSet
                 ActionTypeId:
                   Category: Deploy
@@ -300,22 +247,6 @@ Resources:
                   StackName: !Join ["-", ["Ref":"AWS::StackName", "StagingEnvironment-SecurityGroups"]]
                   ChangeSetName: ChangesToStagingSecurityGroups
                 RunOrder: '4'
-              - !If
-                - IsEFSIncluded
-                - Name: Execute-EFS-ChangeSet
-                  ActionTypeId:
-                    Category: Deploy
-                    Owner: AWS
-                    Provider: CloudFormation
-                    Version: '1'
-                  Configuration:
-                    ActionMode: CHANGE_SET_EXECUTE
-                    Capabilities: CAPABILITY_NAMED_IAM
-                    RoleArn: !GetAtt [CFNRole, Arn]
-                    StackName: !Join ["-", ["Ref":"AWS::StackName", "StagingEnvironment-EFS"]]
-                    ChangeSetName: ChangesToStagingEFS
-                  RunOrder: '5'
-                - !Ref AWS::NoValue
               - Name: Execute-ECS-ChangeSet
                 ActionTypeId:
                   Category: Deploy
@@ -360,23 +291,6 @@ Resources:
                 - !Ref AWS::NoValue
               - !If
                 - IsDevOrDevStage
-                - !If
-                  - IsEFSIncluded
-                  - Name: Delete-EFS-Dev
-                    ActionTypeId:
-                      Category: Deploy
-                      Owner: AWS
-                      Provider: CloudFormation
-                      Version: '1'
-                    Configuration:
-                      ActionMode: DELETE_ONLY
-                      RoleArn: !GetAtt [CFNRole, Arn]
-                      StackName: !Join ["-", ["Ref":"AWS::StackName", "DevEnvironment-EFS"]]
-                    RunOrder: '3'
-                  - !Ref AWS::NoValue
-                - !Ref AWS::NoValue
-              - !If
-                - IsDevOrDevStage
                 - Name: Delete-Security-Groups-Dev
                   ActionTypeId:
                     Category: Deploy
@@ -416,23 +330,6 @@ Resources:
                     RoleArn: !GetAtt [CFNRole, Arn]
                     StackName: !Join ["-", ["Ref":"AWS::StackName", "StagingEnvironment-ECS"]]
                   RunOrder: '2'
-                - !Ref AWS::NoValue
-              - !If
-                - IsStageOrDevStage
-                - !If
-                  - IsEFSIncluded
-                  - Name: Delete-EFS-Stag
-                    ActionTypeId:
-                      Category: Deploy
-                      Owner: AWS
-                      Provider: CloudFormation
-                      Version: '1'
-                    Configuration:
-                      ActionMode: DELETE_ONLY
-                      RoleArn: !GetAtt [CFNRole, Arn]
-                      StackName: !Join ["-", ["Ref":"AWS::StackName", "StagingEnvironment-EFS"]]
-                    RunOrder: '3'
-                  - !Ref AWS::NoValue
                 - !Ref AWS::NoValue
               - !If
                 - IsStageOrDevStage
@@ -505,30 +402,6 @@ Resources:
                       "EnvironmentName": "${TagName}-Prod"
                     }
                 RunOrder: '1'
-              - !If
-                - IsEFSIncluded
-                - Name: Create-EFS-ChangeSet
-                  ActionTypeId:
-                    Category: Deploy
-                    Owner: AWS
-                    Provider: CloudFormation
-                    Version: '1'
-                  InputArtifacts:
-                    - Name: TemplateSource
-                  Configuration:
-                    ActionMode: CHANGE_SET_REPLACE
-                    Capabilities: CAPABILITY_NAMED_IAM
-                    RoleArn: !GetAtt [CFNRole, Arn]
-                    StackName: !Join ["-", ["Ref":"AWS::StackName", "ProdEnvironment-EFS"]]
-                    ChangeSetName: ChangesToProdEFS
-                    TemplatePath: TemplateSource::efs.yaml
-                    TemplateConfiguration: TemplateSource::efs-config.json
-                    ParameterOverrides: !Sub |
-                      {
-                        "EnvironmentName": "${TagName}-Prod"
-                      }
-                  RunOrder: '1'
-                - !Ref AWS::NoValue
               - Name: Create-ECS-ChangeSet
                 ActionTypeId:
                   Category: Deploy
@@ -584,22 +457,6 @@ Resources:
                   StackName: !Join ["-", ["Ref":"AWS::StackName", "ProdEnvironment-SecurityGroups"]]
                   ChangeSetName: ChangesToProdSecurityGroups
                 RunOrder: '4'
-              - !If
-                - IsEFSIncluded
-                - Name: Execute-EFS-ChangeSet
-                  ActionTypeId:
-                    Category: Deploy
-                    Owner: AWS
-                    Provider: CloudFormation
-                    Version: '1'
-                  Configuration:
-                    ActionMode: CHANGE_SET_EXECUTE
-                    Capabilities: CAPABILITY_NAMED_IAM
-                    RoleArn: !GetAtt [CFNRole, Arn]
-                    StackName: !Join ["-", ["Ref":"AWS::StackName", "ProdEnvironment-EFS"]]
-                    ChangeSetName: ChangesToProdEFS
-                  RunOrder: '5'
-                - !Ref AWS::NoValue
               - Name: Execute-ECS-ChangeSet
                 ActionTypeId:
                   Category: Deploy
@@ -639,20 +496,6 @@ Resources:
                   RoleArn: !GetAtt [CFNRole, Arn]
                   StackName: !Join ["-", ["Ref":"AWS::StackName", "ProdEnvironment-ECS"]]
                 RunOrder: '2'
-              - !If
-                - IsEFSIncluded
-                - Name: Delete-Prod-EFS
-                  ActionTypeId:
-                    Category: Deploy
-                    Owner: AWS
-                    Provider: CloudFormation
-                    Version: '1'
-                  Configuration:
-                    ActionMode: DELETE_ONLY
-                    RoleArn: !GetAtt [CFNRole, Arn]
-                    StackName: !Join ["-", ["Ref":"AWS::StackName", "ProdEnvironment-EFS"]]
-                  RunOrder: '3'
-                - !Ref AWS::NoValue
               - Name: Delete-Security-Groups-Prod
                 ActionTypeId:
                   Category: Deploy
@@ -676,6 +519,10 @@ Resources:
                   StackName: !Join ["-", ["Ref":"AWS::StackName", "ProdEnvironment-VPC"]]
                 RunOrder: '5'
           - !Ref AWS::NoValue
+
+  #-----------------------------------------------------------------------------#
+  # Role for CodePipeline service
+  #-----------------------------------------------------------------------------#
 
   CFNRole:
     Type: AWS::IAM::Role

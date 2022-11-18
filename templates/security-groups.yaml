@@ -11,13 +11,12 @@ Parameters:
 
 Resources:
 
-    # This security group defines who/where is allowed to access the ECS hosts(EC2 or Fargate) directly.
-    # By default we're just allowing access from the load balancer. If you want to SSH
-    # into the hosts, or expose non-load balanced services you can open their ports here.
+    # This security group defines who/where is allowed to access the ECS hosts(Fargate) directly.
+    # By default we're allowing access from the load balancer.
+    # If you want to expose non-load balanced services you can open their ports here.
     ECSHostSecurityGroup:
       Type: AWS::EC2::SecurityGroup
       Properties:
-        # TODO: Should be enabled for the next release
         # GroupName: !Sub "${EnvironmentName}-ECS-Hosts"
         GroupDescription: Access to the ECS hosts and the tasks/containers that run on them
         VpcId:
@@ -35,7 +34,8 @@ Resources:
 
     # This is a generic security group which allows only traffic from private subnets
     # Example usage is when you need to secure AWS PrivateLink connection
-    # (https://docs.atlas.mongodb.com/security-private-endpoint/#make-sure-that-your-security-groups-are-configured-properly) By default we're just allowing access from the load balancer. If you want to SSH
+    # https://docs.atlas.mongodb.com/security-private-endpoint/#make-sure-that-your-security-groups-are-configured-properly.
+    # By default we're allowing access from the load balancer.
     PrivateSubnetSecurityGroup:
       Type: AWS::EC2::SecurityGroup
       Properties:
