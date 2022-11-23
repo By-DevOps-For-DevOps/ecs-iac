@@ -51,7 +51,7 @@ The pipeline uses the artifact to automatically create stacks and change sets.
 
 ## Steps to upgrade
 
-1. Download `templates.zip` file from your S3 bucket where you store your CloudFormation source artifact (e.g. `ngp-v300-dev-stag`).
+1. Download `templates.zip` file from your S3 bucket where you store your CloudFormation source artifact (e.g. `ngp-v305-dev-stag`).
 1. Unzip `templates` file. Copy `templates/ecs-cluster-config.json` and `templates/network-config.json` files into `templates` folder of this repo. It should overwrite existing default parameter files.
 1. Run `bash bin/configure.sh`. It will compress and upload files into the s3 bucket, which will trigger the infra pipeline.
 1. From AWS console find your infra CodePipeline and manually approve in ApproveChangeSet.
